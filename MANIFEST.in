@@ -1,4 +1,0 @@
-include README.md
-include LICENSE
-include requirements.txt
-recursive-include d_imm/splitters *.pyx *.pxd *.c *.html
