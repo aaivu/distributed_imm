@@ -1,0 +1,8 @@
+venv/
+../../.idea/
+__pycache__/
+*.egg-info/
+d_imm/splitters/build/
+d_imm/splitters/cut_finder.c
+d_imm/splitters/cut_finder.cp311-win_amd64.pyd
+d_imm/splitters/cut_finder.html
