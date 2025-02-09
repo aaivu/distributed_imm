@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: distributed-imm
-Version: 0.1.0
+Version: 0.1.1
 Summary: A distributed implementation of Iterative Mistake Minimization (IMM) for clustering explanations
 Home-page: https://github.com/ScalableXplain/distributed_imm
 Author: Saadha
