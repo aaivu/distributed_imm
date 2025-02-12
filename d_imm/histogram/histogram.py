@@ -27,7 +27,8 @@ class DecisionTreeSplitFinder:
         max_splits_per_feature: list,
         max_bins: int,
         total_weighted_examples: float,
-        seed: int = 42
+        seed: int = 42,
+        example_count: int = 10000
     ):
         """
         Initializes the DecisionTreeSplitFinder with the necessary parameters.
@@ -48,6 +49,7 @@ class DecisionTreeSplitFinder:
         self.max_bins = max_bins
         self.total_weighted_examples = total_weighted_examples
         self.seed = seed
+        self.example_count = example_count
 
     def find_splits(self, input_rdd: RDD) -> list:
         """
@@ -58,8 +60,8 @@ class DecisionTreeSplitFinder:
         """
         return self._find_splits_by_sorting(input_rdd)
 
-    @staticmethod
-    def _samples_fraction_for_find_splits(max_bins: int, num_examples: int) -> float:
+    # @staticmethod
+    def _samples_fraction_for_find_splits(self, max_bins: int, num_examples: int) -> float:
         """
         Calculate the subsample fraction for finding splits based on max_bins and num_examples.
 
@@ -67,7 +69,7 @@ class DecisionTreeSplitFinder:
         :param num_examples: Number of examples (rows) in the dataset.
         :return: A float representing the fraction of data to use.
         """
-        required_samples = max(max_bins * max_bins, 10000)
+        required_samples = max(max_bins * max_bins, self.example_count)
         if required_samples < num_examples:
             return float(required_samples) / num_examples
         else:

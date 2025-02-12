@@ -43,7 +43,7 @@ Split = namedtuple("Split", ["feature_index", "threshold", "categories", "is_con
 
 
 class DistributedIMM:
-    def __init__(self, spark, k, max_leaves=None, verbose=0, n_jobs=None, mode=0):
+    def __init__(self, spark, k, max_leaves=None, verbose=0, n_jobs=None, mode=0, example_count=10000, split_count=32):
         """
         Initialize the DistributedIMM class with Spark session and parameters.
 
@@ -62,6 +62,8 @@ class DistributedIMM:
         self._feature_importance = None
         self.nodes = []
         self.mode = mode
+        self.split_count = split_count
+        self.histogram_example_count = example_count
         self.histogram = None
         
 
@@ -123,14 +125,23 @@ class DistributedIMM:
             num_features=feature_count,
             is_continuous=valid_cols,
             is_unordered=[False for _ in valid_cols],
-            max_splits_per_feature=[100] * feature_count,  # Default Value = 32
-            max_bins=100,  # Default Value = 32
+            max_splits_per_feature=[self.split_count] * feature_count,  # Default Value = 32
+            max_bins=self.split_count,  # Default Value = 32
             total_weighted_examples=float(clustered_data_with_weight.count()),  # Use count for total weight
-            seed=42  # Default Value = 42
+            seed=42,  # Default Value = 42
+            example_count=self.histogram_example_count
         )
 
         # Find splits using the split finder
+        start_time = time.time()
         self.histogram = split_finder.find_splits(input_rdd=clustered_rdd)
+        end_time = time.time()
+
+        if self.verbose > 2:
+            elapsed_time = (end_time - start_time)
+            minutes, seconds = divmod(elapsed_time, 60)
+            print(f"Time taken to build the histogram: {int(minutes)} minutes and {seconds:.2f} seconds")
+            print("Histogram:", self.histogram)
         
         # self.histogram_broadcast = self.spark.sparkContext.broadcast(self.histogram)
 
