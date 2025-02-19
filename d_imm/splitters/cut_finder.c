@@ -22773,7 +22773,7 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  *                 if centers[y[data_order[ix]], col] > threshold:
  *                     mistakes += 1             # <<<<<<<<<<<<<<
  *             else:
- *                 break
+ *                 if centers[y[data_order[ix]], col] <= threshold:
  */
           __pyx_v_mistakes = (__pyx_v_mistakes + 1);
 
@@ -22799,27 +22799,49 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
       /* "cut_finder.pyx":312
  *                     mistakes += 1
  *             else:
- *                 break             # <<<<<<<<<<<<<<
+ *                 if centers[y[data_order[ix]], col] <= threshold:             # <<<<<<<<<<<<<<
+ *                     mistakes += 1
+ *             ix += 1
+ */
+      /*else*/ {
+        __pyx_t_4 = __pyx_v_ix;
+        __pyx_t_19 = (*((__pyx_t_5numpy_int64_t *) ( /* dim=0 */ (__pyx_v_data_order.data + __pyx_t_4 * __pyx_v_data_order.strides[0]) )));
+        __pyx_t_20 = (*((__pyx_t_10cut_finder_NP_INT_t *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_19 * __pyx_v_y.strides[0]) )));
+        __pyx_t_6 = __pyx_v_col;
+        __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_20 * __pyx_v_centers.strides[0]) ) + __pyx_t_6 * __pyx_v_centers.strides[1]) ))) <= __pyx_v_threshold);
+        if (__pyx_t_5) {
+
+          /* "cut_finder.pyx":313
+ *             else:
+ *                 if centers[y[data_order[ix]], col] <= threshold:
+ *                     mistakes += 1             # <<<<<<<<<<<<<<
  *             ix += 1
  * 
  */
-      /*else*/ {
-        goto __pyx_L25_break;
+          __pyx_v_mistakes = (__pyx_v_mistakes + 1);
+
+          /* "cut_finder.pyx":312
+ *                     mistakes += 1
+ *             else:
+ *                 if centers[y[data_order[ix]], col] <= threshold:             # <<<<<<<<<<<<<<
+ *                     mistakes += 1
+ *             ix += 1
+ */
+        }
       }
       __pyx_L26:;
 
-      /* "cut_finder.pyx":313
- *             else:
- *                 break
+      /* "cut_finder.pyx":314
+ *                 if centers[y[data_order[ix]], col] <= threshold:
+ *                     mistakes += 1
  *             ix += 1             # <<<<<<<<<<<<<<
  * 
  *         # Store result
  */
       __pyx_v_ix = (__pyx_v_ix + 1);
     }
-    __pyx_L25_break:;
 
-    /* "cut_finder.pyx":316
+    /* "cut_finder.pyx":317
  * 
  *         # Store result
  *         with gil:             # <<<<<<<<<<<<<<
@@ -22832,7 +22854,7 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         #endif
         /*try:*/ {
 
-          /* "cut_finder.pyx":317
+          /* "cut_finder.pyx":318
  *         # Store result
  *         with gil:
  *             feature_results.append({             # <<<<<<<<<<<<<<
@@ -22841,59 +22863,59 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
           if (unlikely(__pyx_v_feature_results == Py_None)) {
             PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "append");
-            __PYX_ERR(0, 317, __pyx_L31_error)
+            __PYX_ERR(0, 318, __pyx_L32_error)
           }
 
-          /* "cut_finder.pyx":318
+          /* "cut_finder.pyx":319
  *         with gil:
  *             feature_results.append({
  *                 'feature': col,             # <<<<<<<<<<<<<<
  *                 'threshold': threshold,
  *                 'mistakes': mistakes
  */
-          __pyx_t_7 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 318, __pyx_L31_error)
+          __pyx_t_7 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 319, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_7);
-          __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_col); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 318, __pyx_L31_error)
+          __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_col); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 319, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_8);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_feature, __pyx_t_8) < 0) __PYX_ERR(0, 318, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_feature, __pyx_t_8) < 0) __PYX_ERR(0, 319, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-          /* "cut_finder.pyx":319
+          /* "cut_finder.pyx":320
  *             feature_results.append({
  *                 'feature': col,
  *                 'threshold': threshold,             # <<<<<<<<<<<<<<
  *                 'mistakes': mistakes
  *             })
  */
-          __pyx_t_8 = PyFloat_FromDouble(__pyx_v_threshold); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 319, __pyx_L31_error)
+          __pyx_t_8 = PyFloat_FromDouble(__pyx_v_threshold); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 320, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_8);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_threshold, __pyx_t_8) < 0) __PYX_ERR(0, 318, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_threshold, __pyx_t_8) < 0) __PYX_ERR(0, 319, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-          /* "cut_finder.pyx":320
+          /* "cut_finder.pyx":321
  *                 'feature': col,
  *                 'threshold': threshold,
  *                 'mistakes': mistakes             # <<<<<<<<<<<<<<
  *             })
  * 
  */
-          __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_mistakes); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 320, __pyx_L31_error)
+          __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_mistakes); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 321, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_8);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_mistakes, __pyx_t_8) < 0) __PYX_ERR(0, 318, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_mistakes, __pyx_t_8) < 0) __PYX_ERR(0, 319, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-          /* "cut_finder.pyx":317
+          /* "cut_finder.pyx":318
  *         # Store result
  *         with gil:
  *             feature_results.append({             # <<<<<<<<<<<<<<
  *                 'feature': col,
  *                 'threshold': threshold,
  */
-          __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_feature_results, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 317, __pyx_L31_error)
+          __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_feature_results, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 318, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         }
 
-        /* "cut_finder.pyx":316
+        /* "cut_finder.pyx":317
  * 
  *         # Store result
  *         with gil:             # <<<<<<<<<<<<<<
@@ -22905,20 +22927,20 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
             #ifdef WITH_THREAD
             __Pyx_PyGILState_Release(__pyx_gilstate_save);
             #endif
-            goto __pyx_L32;
+            goto __pyx_L33;
           }
-          __pyx_L31_error: {
+          __pyx_L32_error: {
             #ifdef WITH_THREAD
             __Pyx_PyGILState_Release(__pyx_gilstate_save);
             #endif
             goto __pyx_L1_error;
           }
-          __pyx_L32:;
+          __pyx_L33:;
         }
     }
   }
 
-  /* "cut_finder.pyx":323
+  /* "cut_finder.pyx":324
  *             })
  * 
  *     free(combined_thresholds)             # <<<<<<<<<<<<<<
@@ -22967,7 +22989,7 @@ __pyx_t_8 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
   #endif
 }
 
-/* "cut_finder.pyx":328
+/* "cut_finder.pyx":329
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef void update_col_all_mistakes_histogram_unsorted(             # <<<<<<<<<<<<<<
@@ -23017,7 +23039,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
   #endif
   __Pyx_RefNannySetupContext("update_col_all_mistakes_histogram_unsorted", 1);
 
-  /* "cut_finder.pyx":338
+  /* "cut_finder.pyx":339
  *     """
  *     cdef int i
  *     cdef int ix = 0             # <<<<<<<<<<<<<<
@@ -23026,7 +23048,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
   __pyx_v_ix = 0;
 
-  /* "cut_finder.pyx":339
+  /* "cut_finder.pyx":340
  *     cdef int i
  *     cdef int ix = 0
  *     cdef int ic = 0             # <<<<<<<<<<<<<<
@@ -23035,7 +23057,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
   __pyx_v_ic = 0;
 
-  /* "cut_finder.pyx":340
+  /* "cut_finder.pyx":341
  *     cdef int ix = 0
  *     cdef int ic = 0
  *     cdef int mistakes = 0             # <<<<<<<<<<<<<<
@@ -23044,7 +23066,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
   __pyx_v_mistakes = 0;
 
-  /* "cut_finder.pyx":349
+  /* "cut_finder.pyx":350
  * 
  *     # Find the maximum and minimum valid center values
  *     max_val = -INFINITY             # <<<<<<<<<<<<<<
@@ -23053,7 +23075,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
   __pyx_v_max_val = (-INFINITY);
 
-  /* "cut_finder.pyx":350
+  /* "cut_finder.pyx":351
  *     # Find the maximum and minimum valid center values
  *     max_val = -INFINITY
  *     min_val = INFINITY             # <<<<<<<<<<<<<<
@@ -23062,7 +23084,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
   __pyx_v_min_val = INFINITY;
 
-  /* "cut_finder.pyx":352
+  /* "cut_finder.pyx":353
  *     min_val = INFINITY
  * 
  *     for i in range(k):             # <<<<<<<<<<<<<<
@@ -23074,7 +23096,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "cut_finder.pyx":353
+    /* "cut_finder.pyx":354
  * 
  *     for i in range(k):
  *         if valid_centers[i] == 1:             # <<<<<<<<<<<<<<
@@ -23085,7 +23107,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
     __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_INT_t *) ( /* dim=0 */ (__pyx_v_valid_centers.data + __pyx_t_4 * __pyx_v_valid_centers.strides[0]) ))) == 1);
     if (__pyx_t_5) {
 
-      /* "cut_finder.pyx":354
+      /* "cut_finder.pyx":355
  *     for i in range(k):
  *         if valid_centers[i] == 1:
  *             if centers[i, col] > max_val:             # <<<<<<<<<<<<<<
@@ -23097,7 +23119,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
       __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_4 * __pyx_v_centers.strides[0]) ) + __pyx_t_6 * __pyx_v_centers.strides[1]) ))) > __pyx_v_max_val);
       if (__pyx_t_5) {
 
-        /* "cut_finder.pyx":355
+        /* "cut_finder.pyx":356
  *         if valid_centers[i] == 1:
  *             if centers[i, col] > max_val:
  *                 max_val = centers[i, col]             # <<<<<<<<<<<<<<
@@ -23108,7 +23130,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
         __pyx_t_4 = __pyx_v_col;
         __pyx_v_max_val = (*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_6 * __pyx_v_centers.strides[0]) ) + __pyx_t_4 * __pyx_v_centers.strides[1]) )));
 
-        /* "cut_finder.pyx":354
+        /* "cut_finder.pyx":355
  *     for i in range(k):
  *         if valid_centers[i] == 1:
  *             if centers[i, col] > max_val:             # <<<<<<<<<<<<<<
@@ -23117,7 +23139,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
       }
 
-      /* "cut_finder.pyx":356
+      /* "cut_finder.pyx":357
  *             if centers[i, col] > max_val:
  *                 max_val = centers[i, col]
  *             if centers[i, col] < min_val:             # <<<<<<<<<<<<<<
@@ -23129,7 +23151,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
       __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_4 * __pyx_v_centers.strides[0]) ) + __pyx_t_6 * __pyx_v_centers.strides[1]) ))) < __pyx_v_min_val);
       if (__pyx_t_5) {
 
-        /* "cut_finder.pyx":357
+        /* "cut_finder.pyx":358
  *                 max_val = centers[i, col]
  *             if centers[i, col] < min_val:
  *                 min_val = centers[i, col]             # <<<<<<<<<<<<<<
@@ -23140,7 +23162,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
         __pyx_t_4 = __pyx_v_col;
         __pyx_v_min_val = (*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_6 * __pyx_v_centers.strides[0]) ) + __pyx_t_4 * __pyx_v_centers.strides[1]) )));
 
-        /* "cut_finder.pyx":356
+        /* "cut_finder.pyx":357
  *             if centers[i, col] > max_val:
  *                 max_val = centers[i, col]
  *             if centers[i, col] < min_val:             # <<<<<<<<<<<<<<
@@ -23149,7 +23171,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
  */
       }
 
-      /* "cut_finder.pyx":353
+      /* "cut_finder.pyx":354
  * 
  *     for i in range(k):
  *         if valid_centers[i] == 1:             # <<<<<<<<<<<<<<
@@ -23159,7 +23181,7 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
     }
   }
 
-  /* "cut_finder.pyx":360
+  /* "cut_finder.pyx":361
  * 
  *     # Sorting and threshold combination
  *     with gil:             # <<<<<<<<<<<<<<
@@ -23172,16 +23194,16 @@ static void __pyx_f_10cut_finder_update_col_all_mistakes_histogram_unsorted(__Py
       #endif
       /*try:*/ {
 
-        /* "cut_finder.pyx":361
+        /* "cut_finder.pyx":362
  *     # Sorting and threshold combination
  *     with gil:
  *         centers_order = np.asarray(centers[:, col]).argsort()             # <<<<<<<<<<<<<<
  * 
  *         # Combine histogram-based and center-based thresholds
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_np); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 361, __pyx_L9_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_np); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 362, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_asarray); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 361, __pyx_L9_error)
+        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_asarray); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 362, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         __pyx_t_11.data = __pyx_v_centers.data;
@@ -23197,7 +23219,7 @@ __pyx_t_11.strides[0] = __pyx_v_centers.strides[0];
         __pyx_t_11.data += __pyx_tmp_idx * __pyx_tmp_stride;
 }
 
-__pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __pyx_memview_get_nn___pyx_t_10cut_finder_NP_FLOAT_t, (int (*)(char *, PyObject *)) __pyx_memview_set_nn___pyx_t_10cut_finder_NP_FLOAT_t, 0);; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 361, __pyx_L9_error)
+__pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __pyx_memview_get_nn___pyx_t_10cut_finder_NP_FLOAT_t, (int (*)(char *, PyObject *)) __pyx_memview_set_nn___pyx_t_10cut_finder_NP_FLOAT_t, 0);; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 362, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_9);
         __PYX_XCLEAR_MEMVIEW(&__pyx_t_11, 1);
         __pyx_t_11.memview = NULL; __pyx_t_11.data = NULL;
@@ -23220,11 +23242,11 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
           __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_13, 1+__pyx_t_13);
           __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-          if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 361, __pyx_L9_error)
+          if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 362, __pyx_L9_error)
           __Pyx_GOTREF(__pyx_t_8);
           __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
         }
-        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_argsort); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 361, __pyx_L9_error)
+        __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_argsort); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 362, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         __pyx_t_8 = NULL;
@@ -23245,29 +23267,29 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
           PyObject *__pyx_callargs[2] = {__pyx_t_8, NULL};
           __pyx_t_7 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_13, 0+__pyx_t_13);
           __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
-          if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 361, __pyx_L9_error)
+          if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 362, __pyx_L9_error)
           __Pyx_GOTREF(__pyx_t_7);
           __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
         }
-        __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_5numpy_int64_t(__pyx_t_7, PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 361, __pyx_L9_error)
+        __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_nn___pyx_t_5numpy_int64_t(__pyx_t_7, PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 362, __pyx_L9_error)
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         __pyx_v_centers_order = __pyx_t_14;
         __pyx_t_14.memview = NULL;
         __pyx_t_14.data = NULL;
 
-        /* "cut_finder.pyx":364
+        /* "cut_finder.pyx":365
  * 
  *         # Combine histogram-based and center-based thresholds
  *         unique_thresholds = set()             # <<<<<<<<<<<<<<
  *         for split in histogram:
  *             if min_val <= split.threshold < max_val:
  */
-        __pyx_t_7 = PySet_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 364, __pyx_L9_error)
+        __pyx_t_7 = PySet_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 365, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_7);
         __pyx_v_unique_thresholds = ((PyObject*)__pyx_t_7);
         __pyx_t_7 = 0;
 
-        /* "cut_finder.pyx":365
+        /* "cut_finder.pyx":366
  *         # Combine histogram-based and center-based thresholds
  *         unique_thresholds = set()
  *         for split in histogram:             # <<<<<<<<<<<<<<
@@ -23276,7 +23298,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
         if (unlikely(__pyx_v_histogram == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-          __PYX_ERR(0, 365, __pyx_L9_error)
+          __PYX_ERR(0, 366, __pyx_L9_error)
         }
         __pyx_t_7 = __pyx_v_histogram; __Pyx_INCREF(__pyx_t_7);
         __pyx_t_15 = 0;
@@ -23284,57 +23306,57 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 365, __pyx_L9_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 366, __pyx_L9_error)
             #endif
             if (__pyx_t_15 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_10 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_15); __Pyx_INCREF(__pyx_t_10); __pyx_t_15++; if (unlikely((0 < 0))) __PYX_ERR(0, 365, __pyx_L9_error)
+          __pyx_t_10 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_15); __Pyx_INCREF(__pyx_t_10); __pyx_t_15++; if (unlikely((0 < 0))) __PYX_ERR(0, 366, __pyx_L9_error)
           #else
-          __pyx_t_10 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_15); __pyx_t_15++; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 365, __pyx_L9_error)
+          __pyx_t_10 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_15); __pyx_t_15++; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 366, __pyx_L9_error)
           __Pyx_GOTREF(__pyx_t_10);
           #endif
           __Pyx_XDECREF_SET(__pyx_v_split, __pyx_t_10);
           __pyx_t_10 = 0;
 
-          /* "cut_finder.pyx":366
+          /* "cut_finder.pyx":367
  *         unique_thresholds = set()
  *         for split in histogram:
  *             if min_val <= split.threshold < max_val:             # <<<<<<<<<<<<<<
  *                 unique_thresholds.add(split.threshold)
  * 
  */
-          __pyx_t_10 = PyFloat_FromDouble(__pyx_v_min_val); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 366, __pyx_L9_error)
+          __pyx_t_10 = PyFloat_FromDouble(__pyx_v_min_val); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 367, __pyx_L9_error)
           __Pyx_GOTREF(__pyx_t_10);
-          __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_split, __pyx_n_s_threshold); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 366, __pyx_L9_error)
+          __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_split, __pyx_n_s_threshold); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 367, __pyx_L9_error)
           __Pyx_GOTREF(__pyx_t_8);
-          __pyx_t_9 = PyObject_RichCompare(__pyx_t_10, __pyx_t_8, Py_LE); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 366, __pyx_L9_error)
+          __pyx_t_9 = PyObject_RichCompare(__pyx_t_10, __pyx_t_8, Py_LE); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 367, __pyx_L9_error)
           if (__Pyx_PyObject_IsTrue(__pyx_t_9)) {
             __Pyx_DECREF(__pyx_t_9);
-            __pyx_t_12 = PyFloat_FromDouble(__pyx_v_max_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 366, __pyx_L9_error)
+            __pyx_t_12 = PyFloat_FromDouble(__pyx_v_max_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 367, __pyx_L9_error)
             __Pyx_GOTREF(__pyx_t_12);
-            __pyx_t_9 = PyObject_RichCompare(__pyx_t_8, __pyx_t_12, Py_LT); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 366, __pyx_L9_error)
+            __pyx_t_9 = PyObject_RichCompare(__pyx_t_8, __pyx_t_12, Py_LT); __Pyx_XGOTREF(__pyx_t_9); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 367, __pyx_L9_error)
             __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
           }
           __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-          __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_9); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 366, __pyx_L9_error)
+          __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_9); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 367, __pyx_L9_error)
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
           if (__pyx_t_5) {
 
-            /* "cut_finder.pyx":367
+            /* "cut_finder.pyx":368
  *         for split in histogram:
  *             if min_val <= split.threshold < max_val:
  *                 unique_thresholds.add(split.threshold)             # <<<<<<<<<<<<<<
  * 
  *         for i in range(k):
  */
-            __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_split, __pyx_n_s_threshold); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 367, __pyx_L9_error)
+            __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_split, __pyx_n_s_threshold); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 368, __pyx_L9_error)
             __Pyx_GOTREF(__pyx_t_9);
-            __pyx_t_16 = PySet_Add(__pyx_v_unique_thresholds, __pyx_t_9); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 367, __pyx_L9_error)
+            __pyx_t_16 = PySet_Add(__pyx_v_unique_thresholds, __pyx_t_9); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 368, __pyx_L9_error)
             __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-            /* "cut_finder.pyx":366
+            /* "cut_finder.pyx":367
  *         unique_thresholds = set()
  *         for split in histogram:
  *             if min_val <= split.threshold < max_val:             # <<<<<<<<<<<<<<
@@ -23343,7 +23365,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
           }
 
-          /* "cut_finder.pyx":365
+          /* "cut_finder.pyx":366
  *         # Combine histogram-based and center-based thresholds
  *         unique_thresholds = set()
  *         for split in histogram:             # <<<<<<<<<<<<<<
@@ -23353,7 +23375,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         }
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-        /* "cut_finder.pyx":369
+        /* "cut_finder.pyx":370
  *                 unique_thresholds.add(split.threshold)
  * 
  *         for i in range(k):             # <<<<<<<<<<<<<<
@@ -23365,7 +23387,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
           __pyx_v_i = __pyx_t_3;
 
-          /* "cut_finder.pyx":370
+          /* "cut_finder.pyx":371
  * 
  *         for i in range(k):
  *             if valid_centers[i] == 1 and centers[i, col]!=max_val:             # <<<<<<<<<<<<<<
@@ -23386,7 +23408,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
           __pyx_L18_bool_binop_done:;
           if (__pyx_t_5) {
 
-            /* "cut_finder.pyx":371
+            /* "cut_finder.pyx":372
  *         for i in range(k):
  *             if valid_centers[i] == 1 and centers[i, col]!=max_val:
  *                 unique_thresholds.add(centers[i, col])             # <<<<<<<<<<<<<<
@@ -23395,12 +23417,12 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
             __pyx_t_6 = __pyx_v_i;
             __pyx_t_4 = __pyx_v_col;
-            __pyx_t_7 = PyFloat_FromDouble((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_6 * __pyx_v_centers.strides[0]) ) + __pyx_t_4 * __pyx_v_centers.strides[1]) )))); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 371, __pyx_L9_error)
+            __pyx_t_7 = PyFloat_FromDouble((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_6 * __pyx_v_centers.strides[0]) ) + __pyx_t_4 * __pyx_v_centers.strides[1]) )))); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 372, __pyx_L9_error)
             __Pyx_GOTREF(__pyx_t_7);
-            __pyx_t_16 = PySet_Add(__pyx_v_unique_thresholds, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 371, __pyx_L9_error)
+            __pyx_t_16 = PySet_Add(__pyx_v_unique_thresholds, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 372, __pyx_L9_error)
             __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-            /* "cut_finder.pyx":370
+            /* "cut_finder.pyx":371
  * 
  *         for i in range(k):
  *             if valid_centers[i] == 1 and centers[i, col]!=max_val:             # <<<<<<<<<<<<<<
@@ -23410,32 +23432,32 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
           }
         }
 
-        /* "cut_finder.pyx":373
+        /* "cut_finder.pyx":374
  *                 unique_thresholds.add(centers[i, col])
  * 
  *         sorted_thresholds = sorted(unique_thresholds)             # <<<<<<<<<<<<<<
  * 
  *         num_thresholds = len(sorted_thresholds)
  */
-        __pyx_t_9 = PySequence_List(__pyx_v_unique_thresholds); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 373, __pyx_L9_error)
+        __pyx_t_9 = PySequence_List(__pyx_v_unique_thresholds); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 374, __pyx_L9_error)
         __Pyx_GOTREF(__pyx_t_9);
         __pyx_t_7 = ((PyObject*)__pyx_t_9);
         __pyx_t_9 = 0;
-        __pyx_t_16 = PyList_Sort(__pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 373, __pyx_L9_error)
+        __pyx_t_16 = PyList_Sort(__pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 374, __pyx_L9_error)
         __pyx_v_sorted_thresholds = ((PyObject*)__pyx_t_7);
         __pyx_t_7 = 0;
 
-        /* "cut_finder.pyx":375
+        /* "cut_finder.pyx":376
  *         sorted_thresholds = sorted(unique_thresholds)
  * 
  *         num_thresholds = len(sorted_thresholds)             # <<<<<<<<<<<<<<
  *         combined_thresholds = <NP_FLOAT_t *> malloc(num_thresholds * sizeof(NP_FLOAT_t))
  * 
  */
-        __pyx_t_15 = __Pyx_PyList_GET_SIZE(__pyx_v_sorted_thresholds); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 375, __pyx_L9_error)
+        __pyx_t_15 = __Pyx_PyList_GET_SIZE(__pyx_v_sorted_thresholds); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 376, __pyx_L9_error)
         __pyx_v_num_thresholds = __pyx_t_15;
 
-        /* "cut_finder.pyx":376
+        /* "cut_finder.pyx":377
  * 
  *         num_thresholds = len(sorted_thresholds)
  *         combined_thresholds = <NP_FLOAT_t *> malloc(num_thresholds * sizeof(NP_FLOAT_t))             # <<<<<<<<<<<<<<
@@ -23444,7 +23466,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
         __pyx_v_combined_thresholds = ((__pyx_t_10cut_finder_NP_FLOAT_t *)malloc((__pyx_v_num_thresholds * (sizeof(__pyx_t_10cut_finder_NP_FLOAT_t)))));
 
-        /* "cut_finder.pyx":378
+        /* "cut_finder.pyx":379
  *         combined_thresholds = <NP_FLOAT_t *> malloc(num_thresholds * sizeof(NP_FLOAT_t))
  * 
  *         for i in range(num_thresholds):             # <<<<<<<<<<<<<<
@@ -23456,19 +23478,19 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
           __pyx_v_i = __pyx_t_3;
 
-          /* "cut_finder.pyx":379
+          /* "cut_finder.pyx":380
  * 
  *         for i in range(num_thresholds):
  *             combined_thresholds[i] = sorted_thresholds[i]             # <<<<<<<<<<<<<<
  * 
  *     # Process each threshold
  */
-          __pyx_t_18 = __pyx_PyFloat_AsDouble(PyList_GET_ITEM(__pyx_v_sorted_thresholds, __pyx_v_i)); if (unlikely((__pyx_t_18 == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L9_error)
+          __pyx_t_18 = __pyx_PyFloat_AsDouble(PyList_GET_ITEM(__pyx_v_sorted_thresholds, __pyx_v_i)); if (unlikely((__pyx_t_18 == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 380, __pyx_L9_error)
           (__pyx_v_combined_thresholds[__pyx_v_i]) = __pyx_t_18;
         }
       }
 
-      /* "cut_finder.pyx":360
+      /* "cut_finder.pyx":361
  * 
  *     # Sorting and threshold combination
  *     with gil:             # <<<<<<<<<<<<<<
@@ -23492,7 +23514,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
       }
   }
 
-  /* "cut_finder.pyx":382
+  /* "cut_finder.pyx":383
  * 
  *     # Process each threshold
  *     for i in range(num_thresholds):             # <<<<<<<<<<<<<<
@@ -23504,7 +23526,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "cut_finder.pyx":383
+    /* "cut_finder.pyx":384
  *     # Process each threshold
  *     for i in range(num_thresholds):
  *         mistakes = 0             # <<<<<<<<<<<<<<
@@ -23513,7 +23535,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
     __pyx_v_mistakes = 0;
 
-    /* "cut_finder.pyx":384
+    /* "cut_finder.pyx":385
  *     for i in range(num_thresholds):
  *         mistakes = 0
  *         ix = 0             # <<<<<<<<<<<<<<
@@ -23522,7 +23544,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
     __pyx_v_ix = 0;
 
-    /* "cut_finder.pyx":385
+    /* "cut_finder.pyx":386
  *         mistakes = 0
  *         ix = 0
  *         threshold = combined_thresholds[i]             # <<<<<<<<<<<<<<
@@ -23531,7 +23553,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
     __pyx_v_threshold = (__pyx_v_combined_thresholds[__pyx_v_i]);
 
-    /* "cut_finder.pyx":388
+    /* "cut_finder.pyx":389
  * 
  *         # Count mistakes
  *         while ix < n:             # <<<<<<<<<<<<<<
@@ -23542,7 +23564,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
       __pyx_t_5 = (__pyx_v_ix < __pyx_v_n);
       if (!__pyx_t_5) break;
 
-      /* "cut_finder.pyx":389
+      /* "cut_finder.pyx":390
  *         # Count mistakes
  *         while ix < n:
  *             if X[ix, col] <= threshold:             # <<<<<<<<<<<<<<
@@ -23554,12 +23576,12 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
       __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_4 * __pyx_v_X.strides[0]) ) + __pyx_t_6 * __pyx_v_X.strides[1]) ))) <= __pyx_v_threshold);
       if (__pyx_t_5) {
 
-        /* "cut_finder.pyx":390
+        /* "cut_finder.pyx":391
  *         while ix < n:
  *             if X[ix, col] <= threshold:
  *                 if centers[y[ix], col] > threshold:             # <<<<<<<<<<<<<<
  *                     mistakes += 1
- *             ix += 1
+ *             else:
  */
         __pyx_t_6 = __pyx_v_ix;
         __pyx_t_4 = (*((__pyx_t_10cut_finder_NP_INT_t *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_6 * __pyx_v_y.strides[0]) )));
@@ -23567,35 +23589,70 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_4 * __pyx_v_centers.strides[0]) ) + __pyx_t_19 * __pyx_v_centers.strides[1]) ))) > __pyx_v_threshold);
         if (__pyx_t_5) {
 
-          /* "cut_finder.pyx":391
+          /* "cut_finder.pyx":392
  *             if X[ix, col] <= threshold:
  *                 if centers[y[ix], col] > threshold:
  *                     mistakes += 1             # <<<<<<<<<<<<<<
- *             ix += 1
- * 
+ *             else:
+ *                 if centers[y[ix], col] <= threshold:
  */
           __pyx_v_mistakes = (__pyx_v_mistakes + 1);
 
-          /* "cut_finder.pyx":390
+          /* "cut_finder.pyx":391
  *         while ix < n:
  *             if X[ix, col] <= threshold:
  *                 if centers[y[ix], col] > threshold:             # <<<<<<<<<<<<<<
  *                     mistakes += 1
- *             ix += 1
+ *             else:
  */
         }
 
-        /* "cut_finder.pyx":389
+        /* "cut_finder.pyx":390
  *         # Count mistakes
  *         while ix < n:
  *             if X[ix, col] <= threshold:             # <<<<<<<<<<<<<<
  *                 if centers[y[ix], col] > threshold:
  *                     mistakes += 1
  */
+        goto __pyx_L26;
       }
 
-      /* "cut_finder.pyx":392
- *                 if centers[y[ix], col] > threshold:
+      /* "cut_finder.pyx":394
+ *                     mistakes += 1
+ *             else:
+ *                 if centers[y[ix], col] <= threshold:             # <<<<<<<<<<<<<<
+ *                     mistakes += 1
+ *             ix += 1
+ */
+      /*else*/ {
+        __pyx_t_6 = __pyx_v_ix;
+        __pyx_t_19 = (*((__pyx_t_10cut_finder_NP_INT_t *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_6 * __pyx_v_y.strides[0]) )));
+        __pyx_t_4 = __pyx_v_col;
+        __pyx_t_5 = ((*((__pyx_t_10cut_finder_NP_FLOAT_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_centers.data + __pyx_t_19 * __pyx_v_centers.strides[0]) ) + __pyx_t_4 * __pyx_v_centers.strides[1]) ))) <= __pyx_v_threshold);
+        if (__pyx_t_5) {
+
+          /* "cut_finder.pyx":395
+ *             else:
+ *                 if centers[y[ix], col] <= threshold:
+ *                     mistakes += 1             # <<<<<<<<<<<<<<
+ *             ix += 1
+ * 
+ */
+          __pyx_v_mistakes = (__pyx_v_mistakes + 1);
+
+          /* "cut_finder.pyx":394
+ *                     mistakes += 1
+ *             else:
+ *                 if centers[y[ix], col] <= threshold:             # <<<<<<<<<<<<<<
+ *                     mistakes += 1
+ *             ix += 1
+ */
+        }
+      }
+      __pyx_L26:;
+
+      /* "cut_finder.pyx":396
+ *                 if centers[y[ix], col] <= threshold:
  *                     mistakes += 1
  *             ix += 1             # <<<<<<<<<<<<<<
  * 
@@ -23604,7 +23661,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
       __pyx_v_ix = (__pyx_v_ix + 1);
     }
 
-    /* "cut_finder.pyx":395
+    /* "cut_finder.pyx":399
  * 
  *         # Store result
  *         with gil:             # <<<<<<<<<<<<<<
@@ -23617,7 +23674,7 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
         #endif
         /*try:*/ {
 
-          /* "cut_finder.pyx":396
+          /* "cut_finder.pyx":400
  *         # Store result
  *         with gil:
  *             feature_results.append({             # <<<<<<<<<<<<<<
@@ -23626,59 +23683,59 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
  */
           if (unlikely(__pyx_v_feature_results == Py_None)) {
             PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "append");
-            __PYX_ERR(0, 396, __pyx_L31_error)
+            __PYX_ERR(0, 400, __pyx_L32_error)
           }
 
-          /* "cut_finder.pyx":397
+          /* "cut_finder.pyx":401
  *         with gil:
  *             feature_results.append({
  *                 'feature': col,             # <<<<<<<<<<<<<<
  *                 'threshold': threshold,
  *                 'mistakes': mistakes
  */
-          __pyx_t_7 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 397, __pyx_L31_error)
+          __pyx_t_7 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 401, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_7);
-          __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_col); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 397, __pyx_L31_error)
+          __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_col); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 401, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_9);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_feature, __pyx_t_9) < 0) __PYX_ERR(0, 397, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_feature, __pyx_t_9) < 0) __PYX_ERR(0, 401, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-          /* "cut_finder.pyx":398
+          /* "cut_finder.pyx":402
  *             feature_results.append({
  *                 'feature': col,
  *                 'threshold': threshold,             # <<<<<<<<<<<<<<
  *                 'mistakes': mistakes
  *             })
  */
-          __pyx_t_9 = PyFloat_FromDouble(__pyx_v_threshold); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 398, __pyx_L31_error)
+          __pyx_t_9 = PyFloat_FromDouble(__pyx_v_threshold); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 402, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_9);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_threshold, __pyx_t_9) < 0) __PYX_ERR(0, 397, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_threshold, __pyx_t_9) < 0) __PYX_ERR(0, 401, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-          /* "cut_finder.pyx":399
+          /* "cut_finder.pyx":403
  *                 'feature': col,
  *                 'threshold': threshold,
  *                 'mistakes': mistakes             # <<<<<<<<<<<<<<
  *             })
  * 
  */
-          __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_mistakes); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 399, __pyx_L31_error)
+          __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_mistakes); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 403, __pyx_L32_error)
           __Pyx_GOTREF(__pyx_t_9);
-          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_mistakes, __pyx_t_9) < 0) __PYX_ERR(0, 397, __pyx_L31_error)
+          if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_mistakes, __pyx_t_9) < 0) __PYX_ERR(0, 401, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-          /* "cut_finder.pyx":396
+          /* "cut_finder.pyx":400
  *         # Store result
  *         with gil:
  *             feature_results.append({             # <<<<<<<<<<<<<<
  *                 'feature': col,
  *                 'threshold': threshold,
  */
-          __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_feature_results, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 396, __pyx_L31_error)
+          __pyx_t_16 = __Pyx_PyList_Append(__pyx_v_feature_results, __pyx_t_7); if (unlikely(__pyx_t_16 == ((int)-1))) __PYX_ERR(0, 400, __pyx_L32_error)
           __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         }
 
-        /* "cut_finder.pyx":395
+        /* "cut_finder.pyx":399
  * 
  *         # Store result
  *         with gil:             # <<<<<<<<<<<<<<
@@ -23690,27 +23747,27 @@ __pyx_t_9 = __pyx_memoryview_fromslice(__pyx_t_11, 1, (PyObject *(*)(char *)) __
             #ifdef WITH_THREAD
             __Pyx_PyGILState_Release(__pyx_gilstate_save);
             #endif
-            goto __pyx_L32;
+            goto __pyx_L33;
           }
-          __pyx_L31_error: {
+          __pyx_L32_error: {
             #ifdef WITH_THREAD
             __Pyx_PyGILState_Release(__pyx_gilstate_save);
             #endif
             goto __pyx_L1_error;
           }
-          __pyx_L32:;
+          __pyx_L33:;
         }
     }
   }
 
-  /* "cut_finder.pyx":402
+  /* "cut_finder.pyx":406
  *             })
  * 
  *     free(combined_thresholds)             # <<<<<<<<<<<<<<
  */
   free(__pyx_v_combined_thresholds);
 
-  /* "cut_finder.pyx":328
+  /* "cut_finder.pyx":329
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef void update_col_all_mistakes_histogram_unsorted(             # <<<<<<<<<<<<<<

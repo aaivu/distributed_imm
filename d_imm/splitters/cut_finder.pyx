@@ -309,7 +309,8 @@ cdef void update_col_all_mistakes_histogram_sorted(
                 if centers[y[data_order[ix]], col] > threshold:
                     mistakes += 1
             else:
-                break
+                if centers[y[data_order[ix]], col] <= threshold:
+                    mistakes += 1
             ix += 1
 
         # Store result
@@ -388,6 +389,9 @@ cdef void update_col_all_mistakes_histogram_unsorted(
         while ix < n:
             if X[ix, col] <= threshold:
                 if centers[y[ix], col] > threshold:
+                    mistakes += 1
+            else:
+                if centers[y[ix], col] <= threshold:
                     mistakes += 1
             ix += 1
 

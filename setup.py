@@ -4,7 +4,7 @@ import numpy
 
 setup(
     name="distributed_imm",
-    version="0.1.8",
+    version="0.2.1",
     description="A distributed implementation of Iterative Mistake Minimization (IMM) for clustering explanations",
     author="Saadha",
     author_email="marium.20@cse.mrt.ac.lk",
