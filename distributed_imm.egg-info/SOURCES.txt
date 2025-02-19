@@ -5,7 +5,6 @@ requirements.txt
 setup.py
 d_imm/__init__.py
 d_imm/imm_model.py
-d_imm/splitters/cut_finder.c
 d_imm/histogram/__init__.py
 d_imm/histogram/histogram.py
 d_imm/splitters/__init__.py
