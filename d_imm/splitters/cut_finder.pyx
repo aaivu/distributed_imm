@@ -221,21 +221,22 @@ def get_all_mistakes_histogram(
                         col, n, k, feature_results, histogram[col]
                     )
     else:
-        # Parallelize the process
-        # for col in prange(d, num_threads=njobs):  # Removed nogil=True
-        #     with gil:
-        #         if valid_cols[col] == 1:
-        #             if sorted:
-        #                 update_col_all_mistakes_histogram_sorted(
-        #                     X, y, centers, valid_centers,
-        #                     col, n, k, feature_results, histogram[col]
-        #                 )
-        #             else:
-        #                 update_col_all_mistakes_histogram_unsorted(
-        #                     X, y, centers, valid_centers,
-        #                     col, n, k, feature_results, histogram[col]
-        #                 )
-        pass
+        #Parallelize the process
+        for col in prange(d, num_threads=njobs, schedule='dynamic', nogil=True):
+            if valid_cols[col] == 1:
+                # Ensure GIL is acquired before calling Python-dependent functions
+                with gil:
+                    print("Running in parallel")
+                    if sorted:
+                        update_col_all_mistakes_histogram_sorted(
+                            X, y, centers, valid_centers,
+                            col, n, k, feature_results, histogram[col]
+                        )
+                    else:
+                        update_col_all_mistakes_histogram_unsorted(
+                            X, y, centers, valid_centers,
+                            col, n, k, feature_results, histogram[col]
+                        )
 
     return feature_results
 

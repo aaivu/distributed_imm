@@ -65,7 +65,6 @@ class DistributedIMM:
         self.split_count = split_count
         self.histogram_example_count = example_count
         self.histogram = None
-        
 
     def fit(self, x_data: DataFrame, kmeans_model=None):
         """
@@ -142,7 +141,7 @@ class DistributedIMM:
             minutes, seconds = divmod(elapsed_time, 60)
             print(f"Time taken to build the histogram: {int(minutes)} minutes and {seconds:.2f} seconds")
             print("Histogram:", self.histogram)
-        
+
         # self.histogram_broadcast = self.spark.sparkContext.broadcast(self.histogram)
 
         self.tree = self._build_tree(clustered_data, valid_centers=valid_centers, valid_cols=valid_cols)
@@ -166,7 +165,6 @@ class DistributedIMM:
             elapsed_time = (end_time - start_time)
             minutes, seconds = divmod(elapsed_time, 60)
             print(f"Time taken to fill stats: {int(minutes)} minutes and {seconds:.2f} seconds")
-
 
         if self.verbose > 0:
             print("Tree building completed.")
@@ -215,7 +213,7 @@ class DistributedIMM:
         elif self.mode == 2:
             split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols)
         elif self.mode == 3:
-            split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols, sorted=False)
+            split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols,sorted=False)
         end_time = time.time()
 
         if self.verbose > 2:
@@ -306,7 +304,7 @@ class DistributedIMM:
                     centers_broadcast.value,
                     valid_centers_broadcast.value,
                     valid_cols_broadcast.value,
-                    njobs=1
+                    njobs=self.n_jobs
                 )
                 return results
             except Exception as e:
@@ -408,7 +406,7 @@ class DistributedIMM:
                     valid_centers_broadcast.value,
                     valid_cols_broadcast.value,
                     histograms_broadcast.value,
-                    njobs=1,
+                    njobs=self.n_jobs,
                     sorted=sorted
                 )
                 return results
