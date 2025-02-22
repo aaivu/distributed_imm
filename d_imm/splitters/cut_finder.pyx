@@ -206,6 +206,9 @@ def get_all_mistakes_histogram(
     cdef list feature_results = []
     cdef int col
 
+    # NEW CODE: Convert Histogram
+    cdef NP_FLOAT_t[:,:] hist_array = convert_to_cython_array(histogram)
+    
     if njobs is None or njobs <= 1:
         # Iterate over valid columns
         for col in range(d):
@@ -213,29 +216,29 @@ def get_all_mistakes_histogram(
                 if sorted:
                     update_col_all_mistakes_histogram_sorted(
                         X, y, centers, valid_centers,
-                        col, n, k, feature_results, histogram[col]
+                        col, n, k, feature_results, hist_array[col,:]
                     )
                 else:
                     update_col_all_mistakes_histogram_unsorted(
                         X, y, centers, valid_centers,
-                        col, n, k, feature_results, histogram[col]
+                        col, n, k, feature_results, hist_array[col,:]
                     )
     else:
         # Parallelize the process
-        # for col in prange(d, num_threads=njobs):  # Removed nogil=True
-        #     with gil:
-        #         if valid_cols[col] == 1:
-        #             if sorted:
-        #                 update_col_all_mistakes_histogram_sorted(
-        #                     X, y, centers, valid_centers,
-        #                     col, n, k, feature_results, histogram[col]
-        #                 )
-        #             else:
-        #                 update_col_all_mistakes_histogram_unsorted(
-        #                     X, y, centers, valid_centers,
-        #                     col, n, k, feature_results, histogram[col]
-        #                 )
-        pass
+        for col in prange(d, num_threads=njobs):  # Removed nogil=True
+            
+            if valid_cols[col] == 1:
+                if sorted:
+                    update_col_all_mistakes_histogram_sorted(
+                        X, y, centers, valid_centers,
+                        col, n, k, feature_results, histogram[col,:]
+                    )
+                else:
+                    update_col_all_mistakes_histogram_unsorted(
+                        X, y, centers, valid_centers,
+                        col, n, k, feature_results, histogram[col,:]
+                    )
+        # pass
 
     return feature_results
 
@@ -246,7 +249,7 @@ cdef void update_col_all_mistakes_histogram_sorted(
     NP_FLOAT_t[:,:] X, NP_INT_t[:] y, NP_FLOAT_t[:,:] centers,
     NP_INT_t[:] valid_centers,
     int col, int n, int k,
-    list feature_results, list histogram) nogil:  # Marked as noexcept
+    list feature_results, NP_FLOAT_t[:] histogram) nogil:  # Marked as noexcept
     """
     Helper function to calculate mistakes for a single column using histogram-based and center-based thresholds.
     Appends the results as Python dictionaries to feature_results.
@@ -281,9 +284,12 @@ cdef void update_col_all_mistakes_histogram_sorted(
 
         # Combine histogram-based and center-based thresholds
         unique_thresholds = set()
-        for split in histogram:
-            if min_val <= split.threshold < max_val:
-                unique_thresholds.add(split.threshold)
+        for j in range(len(histogram)):
+            # NaN check
+            if histogram[j]!=histogram[j]:
+                continue
+            if min_val <= histogram[j] < max_val:
+                unique_thresholds.add(histogram[j])
 
         for i in range(k):
             if valid_centers[i] == 1 and centers[i, col]!=max_val:
@@ -330,7 +336,7 @@ cdef void update_col_all_mistakes_histogram_unsorted(
     NP_FLOAT_t[:,:] X, NP_INT_t[:] y, NP_FLOAT_t[:,:] centers,
     NP_INT_t[:] valid_centers,
     int col, int n, int k,
-    list feature_results, list histogram) nogil:  # Marked as noexcept
+    list feature_results, NP_FLOAT_t[:] histogram) nogil:  # Marked as noexcept
     """
     Helper function to calculate mistakes for a single column using histogram-based and center-based thresholds.
     Appends the results as Python dictionaries to feature_results.
@@ -363,9 +369,12 @@ cdef void update_col_all_mistakes_histogram_unsorted(
 
         # Combine histogram-based and center-based thresholds
         unique_thresholds = set()
-        for split in histogram:
-            if min_val <= split.threshold < max_val:
-                unique_thresholds.add(split.threshold)
+        for j in range(len(histogram)):
+            # NaN check
+            if histogram[j]!=histogram[j]:
+                continue
+            if min_val <= histogram[j] < max_val:
+                unique_thresholds.add(histogram[j])
 
         for i in range(k):
             if valid_centers[i] == 1 and centers[i, col]!=max_val:
@@ -404,3 +413,23 @@ cdef void update_col_all_mistakes_histogram_unsorted(
             })
 
     free(combined_thresholds)
+
+# NEW CODE: 
+# Define a function to convert the list of lists into a 2D NumPy array
+def convert_to_cython_array(list splits):
+    cdef int num_features = len(splits)
+    cdef int max_len = max(len(group) for group in splits)  # Find max list length
+    
+    # Create a NumPy 2D array, initialize with NaNs (or use another default value)
+    cdef np.ndarray[double, ndim=2] threshold_array = np.full((num_features, max_len), np.nan, dtype=np.float64)
+
+    cdef int i, j
+    cdef list group
+    cdef object split  # Assume `Split` is a Python object
+    
+    # Convert list of Split objects to a 2D NumPy array
+    for i, group in enumerate(splits):
+        for j, split in enumerate(group):
+            threshold_array[i, j] = split.threshold  # Assign threshold values
+    
+    return threshold_array  # Returns a Cython-compatible NumPy array

@@ -1,0 +1,12 @@
+digraph ClusteringTree {
+node [shape=ellipse, style=filled, fillcolor=lightgrey, fontname=Helvetica];
+n_0 [label="petal_length <= 1.700\nsamples=150\nmistakes=0"];
+n_1 [label="1\nsamples=48\nmistakes=0"];
+n_2 [label="sepal_length <= 6.600\nsamples=102\nmistakes=2"];
+n_3 [label="0\nsamples=74\nmistakes=16"];
+n_4 [label="2\nsamples=28\nmistakes=4"];
+n_0 -> n_1;
+n_0 -> n_2;
+n_2 -> n_3;
+n_2 -> n_4;
+}
