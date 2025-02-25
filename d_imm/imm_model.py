@@ -383,6 +383,7 @@ class DistributedIMM:
         valid_centers_broadcast = self.spark.sparkContext.broadcast(np.array(valid_centers, dtype=np.int32))
         histograms_broadcast = self.spark.sparkContext.broadcast(self.histogram)
         valid_cols_broadcast = self.spark.sparkContext.broadcast(np.array(valid_cols, dtype=np.int32))
+        njobs_broadcast = self.spark.sparkContext.broadcast(self.n_jobs)
 
         def process_partition(iterator):
             """
@@ -406,7 +407,7 @@ class DistributedIMM:
                     valid_centers_broadcast.value,
                     valid_cols_broadcast.value,
                     histograms_broadcast.value,
-                    njobs=self.n_jobs,
+                    njobs=njobs_broadcast.value,
                     sorted=sorted
                 )
                 return results
