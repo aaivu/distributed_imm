@@ -60,7 +60,6 @@ class DecisionTreeSplitFinder:
         """
         return self._find_splits_by_sorting(input_rdd)
 
-    # @staticmethod
     def _samples_fraction_for_find_splits(self, max_bins: int, num_examples: int) -> float:
         """
         Calculate the subsample fraction for finding splits based on max_bins and num_examples.
