@@ -23,7 +23,7 @@ cdef extern from "<limits.h>":
 @cython.wraparound(False)
 def get_all_mistakes_histogram(
     NP_FLOAT_t[:,:] X, NP_INT_t[:] y, NP_FLOAT_t[:,:] centers,
-    NP_INT_t[:] valid_centers, NP_INT_t[:] valid_cols, list histogram, int njobs, bint sorted=True
+    NP_INT_t[:] valid_centers, NP_INT_t[:] valid_cols, list histogram, int njobs
 ):
     """
     Main function to calculate mistakes for all features and thresholds.
@@ -39,117 +39,21 @@ def get_all_mistakes_histogram(
         # Iterate over valid columns
         for col in range(d):
             if valid_cols[col] == 1:
-                if sorted:
-                    update_col_all_mistakes_histogram_sorted(
-                        X, y, centers, valid_centers,
-                        col, n, k, feature_results, histogram[col]
-                    )
-                else:
-                    update_col_all_mistakes_histogram_unsorted(
-                        X, y, centers, valid_centers,
-                        col, n, k, feature_results, histogram[col]
-                    )
+                update_col_all_mistakes_histogram_unsorted(
+                    X, y, centers, valid_centers,
+                    col, n, k, feature_results, histogram[col]
+                )
     else:
         # Parallelize the process
         for col in prange(d, num_threads=njobs, schedule='dynamic', nogil=True):  # Removed nogil=True
             if valid_cols[col] == 1:
                 with gil:
-                    if sorted:
-                        update_col_all_mistakes_histogram_sorted(
-                            X, y, centers, valid_centers,
-                            col, n, k, feature_results, histogram[col]
-                        )
-                    else:
-                        update_col_all_mistakes_histogram_unsorted(
-                            X, y, centers, valid_centers,
-                            col, n, k, feature_results, histogram[col]
-                        )
+                    update_col_all_mistakes_histogram_unsorted(
+                        X, y, centers, valid_centers,
+                        col, n, k, feature_results, histogram[col]
+                    )
     
     return feature_results
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef void update_col_all_mistakes_histogram_sorted(
-    NP_FLOAT_t[:,:] X, NP_INT_t[:] y, NP_FLOAT_t[:,:] centers,
-    NP_INT_t[:] valid_centers,
-    int col, int n, int k,
-    list feature_results, list histogram) nogil:  # Marked as noexcept
-    """
-    Helper function to calculate mistakes for a single column using histogram-based and center-based thresholds.
-    Appends the results as Python dictionaries to feature_results.
-    """
-    cdef int i
-    cdef int ix = 0
-    cdef int ic = 0
-    cdef int mistakes = 0
-    cdef NP_FLOAT_t threshold
-    cdef np.int64_t[:] data_order
-    cdef np.int64_t[:] centers_order
-    cdef int num_thresholds
-    cdef NP_FLOAT_t *combined_thresholds
-    cdef NP_FLOAT_t max_val
-    cdef NP_FLOAT_t min_val
-
-    # Find the maximum and minimum valid center values
-    max_val = -INFINITY
-    min_val = INFINITY
-
-    for i in range(k):
-        if valid_centers[i] == 1:
-            if centers[i, col] > max_val:
-                max_val = centers[i, col]
-            if centers[i, col] < min_val:
-                min_val = centers[i, col]
-
-    # Sorting and threshold combination
-    with gil:
-        data_order = np.asarray(X[:, col]).argsort()
-        centers_order = np.asarray(centers[:, col]).argsort()
-
-        # Combine histogram-based and center-based thresholds
-        unique_thresholds = set()
-        for split in histogram:
-            if min_val <= split.threshold < max_val:
-                unique_thresholds.add(split.threshold)
-
-        for i in range(k):
-            if valid_centers[i] == 1 and centers[i, col]!=max_val:
-                unique_thresholds.add(centers[i, col])
-
-        sorted_thresholds = sorted(unique_thresholds)
-
-        num_thresholds = len(sorted_thresholds)
-        combined_thresholds = <NP_FLOAT_t *> malloc(num_thresholds * sizeof(NP_FLOAT_t))
-
-        for i in range(num_thresholds):
-            combined_thresholds[i] = sorted_thresholds[i]
-
-    # Process each threshold
-    for i in range(num_thresholds):
-        mistakes = 0
-        ix = 0
-        threshold = combined_thresholds[i]
-
-        # Count mistakes
-        while ix < n:
-            if X[data_order[ix], col] <= threshold:
-                if centers[y[data_order[ix]], col] > threshold:
-                    mistakes += 1
-            else:
-                if centers[y[data_order[ix]], col] <= threshold:
-                    mistakes += 1
-            ix += 1
-
-        # Store result
-        with gil:
-            feature_results.append({
-                'feature': col,
-                'threshold': threshold,
-                'mistakes': mistakes
-            })
-
-    free(combined_thresholds)
 
 
 @cython.boundscheck(False)
