@@ -8,3 +8,5 @@ d_imm/splitters/cut_finder.cp311-win_amd64.pyd
 d_imm/splitters/cut_finder.html
 build/
 dist/
+Test/D_IMM_Test/*.png
+Test/D_IMM_Test/*.gv
