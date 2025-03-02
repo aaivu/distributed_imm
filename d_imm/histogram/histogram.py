@@ -60,7 +60,6 @@ class DecisionTreeSplitFinder:
         """
         return self._find_splits_by_sorting(input_rdd)
 
-    # @staticmethod
     def _samples_fraction_for_find_splits(self, max_bins: int, num_examples: int) -> float:
         """
         Calculate the subsample fraction for finding splits based on max_bins and num_examples.
@@ -190,80 +189,6 @@ class DecisionTreeSplitFinder:
 
         return splits_builder
 
-    def _find_splits_for_categorical_feature(
-        self,
-        categories: list,
-        counts: list,
-        is_unordered: bool
-    ) -> list:
-        """
-        Computes split thresholds for a single categorical feature.
-
-        :param categories: List of category names or indices.
-        :param counts: List of counts corresponding to each category.
-        :param is_unordered: Boolean indicating if the categorical feature is unordered.
-        :return: A list of Split objects representing split thresholds.
-        """
-        num_splits = self.max_splits_per_feature[0]
-        if is_unordered:
-            # Handle unordered categorical features (multiclass with low arity)
-            # Use one-vs-all splits for simplicity
-            splits = []
-            for cat in categories:
-                splits.append(Split(
-                    feature_index=-1,
-                    threshold=None,
-                    categories={cat},
-                    is_continuous=False
-                ))
-                if len(splits) >= num_splits:
-                    break
-            return splits
-        else:
-            # Handle ordered categorical features
-            # Sort categories and use stride-based splits
-            sorted_categories_with_counts = sorted(zip(categories, counts), key=lambda x: x[0])
-            sorted_categories = [x[0] for x in sorted_categories_with_counts]
-            sorted_counts = [x[1] for x in sorted_categories_with_counts]
-
-            # Number of possible splits is number of categories -1
-            possible_splits = len(sorted_categories) - 1
-
-            if possible_splits <= num_splits:
-                # Return all possible splits by ordering
-                splits = []
-                for i in range(1, len(sorted_categories)):
-                    left_cats = set(sorted_categories[:i])
-                    splits.append(Split(
-                        feature_index=-1,
-                        threshold=None,
-                        categories=left_cats,
-                        is_continuous=False
-                    ))
-                return splits
-
-            # Otherwise, use stride-based approach to distribute splits based on counts
-            splits = []
-            stride = sum(sorted_counts) / (num_splits + 1)
-            current_sum = 0
-            target = stride
-            left_cats = set()
-
-            for cat, cnt in zip(sorted_categories, sorted_counts):
-                current_sum += cnt
-                left_cats.add(cat)
-                if current_sum >= target:
-                    splits.append(Split(
-                        feature_index=-1,
-                        threshold=None,
-                        categories=set(left_cats),
-                        is_continuous=False
-                    ))
-                    target += stride
-                    if len(splits) >= num_splits:
-                        break
-
-            return splits
 
     def _find_splits_by_sorting(self, sampled_input_rdd: RDD) -> list:
         """
@@ -274,21 +199,16 @@ class DecisionTreeSplitFinder:
         """
         # 1. Identify continuous and categorical features
         continuous_features = [i for i, cont in enumerate(self.is_continuous) if cont]
-        categorical_features = [i for i, cont in enumerate(self.is_continuous) if not cont]
+        # categorical_features = [i for i, cont in enumerate(self.is_continuous) if not cont]
 
         # 2. Handle continuous features
         continuous_splits = self._find_splits_for_continuous_features(sampled_input_rdd, continuous_features)
-
-        # 3. Handle categorical features
-        categorical_splits = self._find_splits_for_categorical_features(sampled_input_rdd, categorical_features)
 
         # 4. Combine splits for all features
         all_splits = []
         for fidx in range(self.num_features):
             if self.is_continuous[fidx]:
                 all_splits.append(continuous_splits.get(fidx, []))
-            else:
-                all_splits.append(categorical_splits.get(fidx, []))
 
         return all_splits
 
@@ -349,140 +269,3 @@ class DecisionTreeSplitFinder:
             continuous_splits[fidx] = splits_with_index
 
         return continuous_splits
-
-    def _find_splits_for_categorical_features(
-        self,
-        sampled_input_rdd: RDD,
-        categorical_features: list
-    ) -> dict:
-        """
-        Finds splits for categorical features.
-
-        :param sampled_input_rdd: RDD of Instance objects.
-        :param categorical_features: List of feature indices that are categorical.
-        :return: Dictionary mapping feature index to list of Split objects.
-        """
-        if not categorical_features:
-            return {}
-
-        # For each Instance, emit (featureIndex, category)
-        feature_category_pairs = (
-            sampled_input_rdd
-            .flatMap(lambda inst: [
-                (i, inst.features[i])
-                for i in categorical_features
-            ])
-        )
-
-        # Aggregate counts for each feature and category
-        feature_aggregates = (
-            feature_category_pairs
-            .map(lambda x: (x[0], x[1]))  # (featureIndex, category)
-            .map(lambda x: ((x[0], x[1]), 1))  # ((featureIndex, category), 1)
-            .reduceByKey(lambda a, b: a + b)  # ((featureIndex, category), count)
-            .map(lambda x: (x[0][0], (x[0][1], x[1])))  # (featureIndex, (category, count))
-        )
-
-        # Collect as map: { featureIndex -> list of (category, count) }
-        feature_category_counts = feature_aggregates.groupByKey().mapValues(list).collectAsMap()
-
-        # Now compute splits for each categorical feature
-        categorical_splits = {}
-        for fidx in categorical_features:
-            category_count_pairs = feature_category_counts.get(fidx, [])
-            categories = [x[0] for x in category_count_pairs]
-            counts = [x[1] for x in category_count_pairs]
-            unordered = self.is_unordered[fidx]
-
-            splits = self._find_splits_for_categorical_feature(
-                categories=categories,
-                counts=counts,
-                is_unordered=unordered
-            )
-            # Assign the correct feature index to each split
-            splits_with_index = [
-                Split(
-                    feature_index=fidx,
-                    threshold=s.threshold,
-                    categories=s.categories,
-                    is_continuous=False
-                ) for s in splits
-            ]
-            categorical_splits[fidx] = splits_with_index
-
-        return categorical_splits
-
-    def _find_splits_for_categorical_feature(
-        self,
-        categories: list,
-        counts: list,
-        is_unordered: bool
-    ) -> list:
-        """
-        Computes split thresholds for a single categorical feature.
-
-        :param categories: List of category names or indices.
-        :param counts: List of counts corresponding to each category.
-        :param is_unordered: Boolean indicating if the categorical feature is unordered.
-        :return: A list of Split objects representing split thresholds.
-        """
-        num_splits = self.max_splits_per_feature[0]
-        if is_unordered:
-            # Handle unordered categorical features (multiclass with low arity)
-            # Use one-vs-all splits for simplicity
-            splits = []
-            for cat in categories:
-                splits.append(Split(
-                    feature_index=-1,
-                    threshold=None,
-                    categories={cat},
-                    is_continuous=False
-                ))
-                if len(splits) >= num_splits:
-                    break
-            return splits
-        else:
-            # Handle ordered categorical features
-            # Sort categories and use stride-based splits
-            sorted_categories_with_counts = sorted(zip(categories, counts), key=lambda x: x[0])
-            sorted_categories = [x[0] for x in sorted_categories_with_counts]
-            sorted_counts = [x[1] for x in sorted_categories_with_counts]
-
-            # Number of possible splits is number of categories -1
-            possible_splits = len(sorted_categories) - 1
-
-            if possible_splits <= num_splits:
-                # Return all possible splits by ordering
-                splits = []
-                for i in range(1, len(sorted_categories)):
-                    left_cats = set(sorted_categories[:i])
-                    splits.append(Split(
-                        feature_index=-1,
-                        threshold=None,
-                        categories=left_cats,
-                        is_continuous=False
-                    ))
-                return splits
-
-            # Otherwise, use stride-based approach to distribute splits based on counts
-            splits = []
-            stride = sum(sorted_counts) / (num_splits + 1)
-            current_sum = 0
-            target = stride
-            left_cats = set()
-
-            for cat, cnt in zip(sorted_categories, sorted_counts):
-                current_sum += cnt
-                left_cats.add(cat)
-                if current_sum >= target:
-                    splits.append(Split(
-                        feature_index=-1,
-                        threshold=None,
-                        categories=set(left_cats),
-                        is_continuous=False
-                    ))
-                    target += stride
-                    if len(splits) >= num_splits:
-                        break
-
-            return splits

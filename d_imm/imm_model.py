@@ -11,8 +11,6 @@ from d_imm.histogram import DecisionTreeSplitFinder
 import numpy as np
 import time
 
-from d_imm.splitters import get_all_mistakes
-
 try:
     from graphviz import Source
 
@@ -43,7 +41,7 @@ Split = namedtuple("Split", ["feature_index", "threshold", "categories", "is_con
 
 
 class DistributedIMM:
-    def __init__(self, spark, k, max_leaves=None, verbose=0, n_jobs=None, mode=0, example_count=10000, split_count=32):
+    def __init__(self, spark, k, max_leaves=None, verbose=0, n_jobs=None, example_count=10000, split_count=32):
         """
         Initialize the DistributedIMM class with Spark session and parameters.
 
@@ -61,7 +59,6 @@ class DistributedIMM:
         self.n_jobs = n_jobs if n_jobs else 1
         self._feature_importance = None
         self.nodes = []
-        self.mode = mode
         self.split_count = split_count
         self.histogram_example_count = example_count
         self.histogram = None
@@ -107,11 +104,6 @@ class DistributedIMM:
 
         # Add a weight column to the DataFrame (default weight = 1.0)
         clustered_data_with_weight = clustered_data.withColumn("weight", lit(1.0))
-
-        # # Convert clustered_data DataFrame to an RDD with the required structure
-        # clustered_rdd = clustered_data_with_weight.rdd.map(
-        #     lambda row: (DenseVector(row['features']), row['prediction'], row['weight'])
-        # )
 
         Instance = namedtuple("Instance", ["features", "label", "weight"])
 
@@ -208,14 +200,7 @@ class DistributedIMM:
             return node
 
         start_time = time.time()
-        if self.mode == 0:
-            split_info = self._find_best_split(x_data_with_y, valid_centers, valid_cols)
-        elif self.mode == 1:
-            split_info = self._find_best_split_distributed(x_data_with_y, valid_centers, valid_cols)
-        elif self.mode == 2:
-            split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols)
-        elif self.mode == 3:
-            split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols, sorted=False)
+        split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols)
         end_time = time.time()
 
         if self.verbose > 2:
@@ -268,108 +253,7 @@ class DistributedIMM:
 
         return node
 
-    def _find_best_split_distributed(self, x_data, valid_centers, valid_cols):
-        """
-        Find the best split for a single node in a distributed fashion using Spark.
-        :param x_data: Spark DataFrame with features and cluster predictions.
-        :param valid_centers: List of valid cluster centers.
-        :param valid_cols: List of valid columns for splitting.
-        :return: Dictionary with keys 'feature', 'threshold', and 'mistakes'.
-        """
-        if self.verbose > 2:
-            print("Finding the best split in a distributed manner")
-
-        # Broadcast the centers, valid_centers, and valid_cols
-        centers_broadcast = self.spark.sparkContext.broadcast(np.array(self.all_centers))
-        valid_centers_broadcast = self.spark.sparkContext.broadcast(np.array(valid_centers, dtype=np.int32))
-        valid_cols_broadcast = self.spark.sparkContext.broadcast(np.array(valid_cols, dtype=np.int32))
-
-        def process_partition(iterator):
-            """
-            Function to process a partition of the data.
-            """
-            import numpy as np
-            from d_imm.splitters.cut_finder import get_all_mistakes
-
-            # TODO: CHECK IF THIS IS EFFICIENT. Convert the iterator to a list of rows
-            rows = list(iterator)
-            if not rows:
-                return []
-
-            features = np.array([row.features for row in rows])
-            predictions = np.array([row.prediction for row in rows], dtype=np.int32)
-
-            try:
-                results = get_all_mistakes(
-                    features,
-                    predictions,
-                    centers_broadcast.value,
-                    valid_centers_broadcast.value,
-                    valid_cols_broadcast.value,
-                    njobs=1
-                )
-                return results
-            except Exception as e:
-                print(f"Error in get_all_mistakes: {e}")
-                return []
-
-        start_time = time.time()
-        # Apply the function to each partition
-        results_rdd = x_data.rdd.mapPartitions(process_partition)
-
-        # Collect and aggregate results
-        all_results = results_rdd.collect()
-
-        end_time = time.time()
-        if self.verbose > 3:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to collect results from worker nodes:{int(minutes)} minutes and {seconds:.2f} seconds")
-
-        start_time = time.time()
-        if isinstance(all_results[0], dict):
-            flattened_results = all_results
-        else:
-            # Otherwise, flatten the list of lists
-            flattened_results = [result for partition_results in all_results for result in partition_results]
-
-        if self.verbose > 3:
-            print(f"Flattened results: {flattened_results}")
-
-        # Aggregate mistakes for the same 'feature' and 'threshold'
-        aggregated_results = defaultdict(lambda: {'feature': None, 'threshold': None, 'mistakes': 0})
-
-        for result in flattened_results:
-            key = (result['feature'], result['threshold'])
-            aggregated_results[key]['feature'] = result['feature']
-            aggregated_results[key]['threshold'] = result['threshold']
-            aggregated_results[key]['mistakes'] += result['mistakes']
-
-        # Convert aggregated results back to a list
-        aggregated_results_list = list(aggregated_results.values())
-
-        if self.verbose > 3:
-            print(f"Aggregated results: {aggregated_results_list}")
-
-        # Find the best split (minimum mistakes)
-        best_split = min(aggregated_results_list, key=lambda x: x['mistakes'])
-
-        end_time = time.time()
-        if self.verbose > 3:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to aggregate results:{int(minutes)} minutes and {seconds:.2f} seconds")
-
-        if self.verbose > 3:
-            print(
-                f"Best split found: Feature {best_split['feature']}, "
-                f"Threshold {best_split['threshold']}, Mistakes {best_split['mistakes']}"
-            )
-
-        return {'feature': best_split['feature'], 'threshold': best_split['threshold'],
-                'mistakes': best_split['mistakes']}
-
-    def _find_best_split_distributed_histogram(self, x_data, valid_centers, valid_cols, sorted=True):
+    def _find_best_split_distributed_histogram(self, x_data, valid_centers, valid_cols):
         """
         Find the best split for a single node using histogram thresholds in a distributed fashion.
         :param x_data: Spark DataFrame with features and cluster predictions.
@@ -385,6 +269,7 @@ class DistributedIMM:
         valid_centers_broadcast = self.spark.sparkContext.broadcast(np.array(valid_centers, dtype=np.int32))
         histograms_broadcast = self.spark.sparkContext.broadcast(self.histogram)
         valid_cols_broadcast = self.spark.sparkContext.broadcast(np.array(valid_cols, dtype=np.int32))
+        njobs_broadcast = self.spark.sparkContext.broadcast(self.n_jobs)
 
         def process_partition(iterator):
             """
@@ -408,8 +293,7 @@ class DistributedIMM:
                     valid_centers_broadcast.value,
                     valid_cols_broadcast.value,
                     histograms_broadcast.value,
-                    njobs=1,
-                    sorted=sorted
+                    njobs=njobs_broadcast.value
                 )
                 return results
             except Exception as e:
@@ -468,50 +352,6 @@ class DistributedIMM:
                 f"Best split found: Feature {best_split['feature']}, "
                 f"Threshold {best_split['threshold']}, Mistakes {best_split['mistakes']}"
             )
-
-        return {'feature': best_split['feature'], 'threshold': best_split['threshold'],
-                'mistakes': best_split['mistakes']}
-
-    def _find_best_split(self, x_data, valid_centers, valid_cols):
-        """
-        Find the best split on a single node (driver) using the broadcasted Cython function.
-        """
-        if self.verbose > 2:
-            print("Finding the best split on the driver node")
-
-        # Broadcast the centers and Cython function
-        centers = np.array(self.all_centers)
-
-        # Prepare the valid centers and valid columns arrays
-        valid_centers_np = np.array(valid_centers, dtype=np.int32)
-        valid_cols_np = np.array(valid_cols, dtype=np.int32)
-
-        # Collect all data to the driver node
-        collected_data = x_data.collect()
-
-        # Convert collected data to NumPy arrays
-        features = np.array([row.features for row in collected_data])
-        predictions = np.array([row.prediction for row in collected_data], dtype=np.int32)
-
-        if self.verbose > 3:
-            print(f"Data collected: {features.shape[0]} samples, {features.shape[1]} features")
-
-        # Call the Cython function directly on the driver node
-        try:
-            results = get_all_mistakes(
-                features, predictions, centers, valid_centers_np, valid_cols_np, njobs=1
-            )
-        except Exception as e:
-            print(f"Error running get_all_mistakes: {e}")
-            raise
-
-        # Find the best split directly from results
-        best_split = min(results, key=lambda x: x['mistakes'])
-
-        if self.verbose > 3:
-            print(f"Results: {results}")
-            print(
-                f"Best split found: Feature {best_split['feature']}, Threshold {best_split['threshold']}, Mistakes {best_split['mistakes']}")
 
         return {'feature': best_split['feature'], 'threshold': best_split['threshold'],
                 'mistakes': best_split['mistakes']}
