@@ -1,3 +1,4 @@
+import pandas as pd
 from pyspark.ml.clustering import KMeans as SparkKMeans
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
@@ -6,6 +7,12 @@ from pyspark.ml.functions import vector_to_array
 from collections import defaultdict
 from pyspark.sql.functions import col, lit
 from collections import namedtuple
+from pyspark.sql.functions import col, udf
+from pyspark.sql.pandas.functions import pandas_udf
+from pyspark.sql.types import IntegerType, DoubleType, ArrayType, StructType, StructField
+from pyspark.sql.functions import col, expr, sqrt, sum as Fsum
+
+import numpy as np
 
 from d_imm.histogram import DecisionTreeSplitFinder
 import numpy as np
@@ -17,6 +24,36 @@ try:
     graphviz_available = True
 except Exception:
     graphviz_available = False
+
+
+# Serialize Tree for Broadcasting
+def serialize_tree(node):
+    """Convert the tree object into a JSON-serializable dictionary."""
+    if node is None:
+        return None
+    return {
+        "feature": node.feature,
+        "value": node.value,
+        "samples": node.samples,
+        "mistakes": node.mistakes,
+        "left": serialize_tree(node.left),
+        "right": serialize_tree(node.right),
+    }
+
+
+# Deserialize Tree for Prediction
+def _predict_subtree(node, features):
+    """Recursively predict clusters based on the serialized tree."""
+    if node is None or "feature" not in node:
+        return -1  # Return a default cluster if something is wrong
+
+    if node["left"] is None and node["right"] is None:
+        return node["value"]
+
+    if features[node["feature"]] <= node["value"]:
+        return _predict_subtree(node["left"], features)
+    else:
+        return _predict_subtree(node["right"], features)
 
 
 class Node:
@@ -476,3 +513,163 @@ class DistributedIMM:
         except ImportError:
             print("Graphviz not available; outputting DOT file as plain text.")
             print(dot_str)
+
+    def predict(self, x_data: DataFrame):
+        """Predict clusters for x_data using a Pandas UDF."""
+        x_data = x_data.withColumn("features_array", vector_to_array("features"))
+
+        # **Broadcast the serialized tree**
+        serialized_tree = serialize_tree(self.tree)
+        tree_broadcast = self.spark.sparkContext.broadcast(serialized_tree)
+
+        @pandas_udf(IntegerType())
+        def predict_batch(features_batch: pd.Series) -> pd.Series:
+            tree = tree_broadcast.value
+            return features_batch.apply(lambda features: _predict_subtree(tree, np.array(features)))
+
+        return x_data.withColumn("prediction", predict_batch(col("features_array")))
+
+    def score(self, x_data: DataFrame):
+        """Compute k-means cost."""
+
+        predicted_data = self.predict(x_data)
+
+        # Convert 'features' column (DenseVector) to an array for aggregation
+        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
+
+        # Get feature dimension from cluster centers
+        feature_dim = len(self.all_centers[0])
+
+        # Compute mean for each feature separately
+        cluster_means = predicted_data.groupBy("prediction").agg(
+            *[F.mean(col("features_array")[i]).alias(f"feature_{i}_mean") for i in range(feature_dim)]
+        )
+
+        # Reconstruct the feature vector as an array
+        cluster_means = cluster_means.withColumn(
+            "cluster_mean", F.array(*[col(f"feature_{i}_mean") for i in range(feature_dim)])
+        ).select("prediction", "cluster_mean")
+
+        # Join with predicted clusters
+        predicted_data = predicted_data.join(cluster_means, "prediction")
+
+        # Broadcast centers as a NumPy list
+        centers_broadcast = self.spark.sparkContext.broadcast(self.all_centers)
+
+        @udf(DoubleType())
+        def squared_distance(features, center):
+            return float(np.linalg.norm(np.array(features) - np.array(center)) ** 2)
+
+        # Compute squared Euclidean distance
+        cost_df = predicted_data.withColumn(
+            "squared_distance", squared_distance(col("features_array"), col("cluster_mean"))
+        )
+
+        # Sum squared distances
+        return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+
+    def surrogate_score(self, x_data: DataFrame):
+        """Compute k-means surrogate cost."""
+
+        predicted_data = self.predict(x_data)
+
+        # Convert `features` column (DenseVector) to an array for calculations
+        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
+
+        # Broadcast cluster centers as a NumPy list
+        centers_broadcast = self.spark.sparkContext.broadcast(self.all_centers)
+
+        @udf(DoubleType())
+        def squared_distance_to_center(features, cluster):
+            center = centers_broadcast.value[cluster]
+            return float(np.linalg.norm(np.array(features) - np.array(center)) ** 2)
+
+        # Compute squared Euclidean distance
+        cost_df = predicted_data.withColumn(
+            "squared_distance", squared_distance_to_center(col("features_array"), col("prediction"))
+        )
+
+        # Sum squared distances
+        return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+
+    def score_sql(self, x_data: DataFrame):
+        """
+        Compute the k-means cost using Spark SQL.
+        :param x_data: The input samples as a Spark DataFrame.
+        :return: k-means cost.
+        """
+        predicted_data = self.predict(x_data)
+
+        # Convert `features` into an array
+        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
+
+        feature_dim = len(self.all_centers[0])
+
+        # Compute mean for each feature separately
+        cluster_means = predicted_data.groupBy("prediction").agg(
+            *[F.mean(col("features_array")[i]).alias(f"feature_{i}_mean") for i in range(feature_dim)]
+        )
+
+        # Reconstruct the feature vector as an array
+        cluster_means = cluster_means.withColumn(
+            "cluster_mean", F.array(*[col(f"feature_{i}_mean") for i in range(feature_dim)])
+        ).select("prediction", "cluster_mean")
+
+        # Join with predicted clusters
+        predicted_data = predicted_data.join(cluster_means, "prediction")
+
+        # **Fix: Replace array_zip() with posexplode()**
+        exploded_features = predicted_data.selectExpr("prediction", "posexplode(features_array)")
+        exploded_means = cluster_means.selectExpr("prediction", "posexplode(cluster_mean)")
+
+        # Join on index (pos) to align feature values and cluster means
+        joined = exploded_features.alias("a").join(
+            exploded_means.alias("b"),
+            (col("a.prediction") == col("b.prediction")) & (col("a.pos") == col("b.pos"))
+        ).selectExpr("a.prediction", "(a.col - b.col) * (a.col - b.col) as squared_distance")
+
+        # Compute total cost
+        total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
+            .agg(F.sum("total_cost")).collect()[0][0]
+
+        return total_cost
+
+    def surrogate_score_sql(self, x_data: DataFrame):
+        """
+        Compute the k-means surrogate cost in a distributed manner using Spark SQL.
+        :param x_data: The input samples as a Spark DataFrame.
+        :return: k-means surrogate cost.
+        """
+        predicted_data = self.predict(x_data)
+
+        # Convert `features` into an array
+        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
+
+        # **Explicitly define schema for centers_df**
+        schema = StructType([
+            StructField("prediction", IntegerType(), False),
+            StructField("center", ArrayType(DoubleType()), False)  # Explicitly define array schema
+        ])
+
+        # Convert cluster centers into a DataFrame with correct schema
+        centers_data = [(i, list(map(float, center))) for i, center in enumerate(self.all_centers)]
+        centers_df = self.spark.createDataFrame(centers_data, schema=schema)
+
+        # Join cluster centers with predicted data
+        predicted_data = predicted_data.join(centers_df, "prediction")
+
+        # **Fix: Replace array_zip() with posexplode()**
+        exploded_features = predicted_data.selectExpr("prediction", "posexplode(features_array)")
+        exploded_centers = centers_df.selectExpr("prediction", "posexplode(center)")
+
+        # Join on index (pos) to align feature values and cluster centers
+        joined = exploded_features.alias("a").join(
+            exploded_centers.alias("b"),
+            (col("a.prediction") == col("b.prediction")) & (col("a.pos") == col("b.pos"))
+        ).selectExpr("a.prediction", "(a.col - b.col) * (a.col - b.col) as squared_distance")
+
+        # Compute total cost
+        total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
+            .agg(F.sum("total_cost")).collect()[0][0]
+
+        return total_cost
