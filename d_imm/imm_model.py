@@ -1,32 +1,25 @@
+import time
+import numpy as np
 import pandas as pd
-from pyspark.ml.clustering import KMeans as SparkKMeans
-from pyspark.ml.linalg import DenseVector
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
-from pyspark.ml.functions import vector_to_array
-from collections import defaultdict
-from pyspark.sql.functions import col, lit
-from collections import namedtuple
-from pyspark.sql.functions import col, udf
+from collections import defaultdict, namedtuple
+
+from pyspark.sql import DataFrame, functions as F
+from pyspark.sql.functions import col, lit, udf, expr, sqrt, sum as Fsum
 from pyspark.sql.pandas.functions import pandas_udf
 from pyspark.sql.types import IntegerType, DoubleType, ArrayType, StructType, StructField
-from pyspark.sql.functions import col, expr, sqrt, sum as Fsum
 
-import numpy as np
-
-from d_imm.histogram import DecisionTreeSplitFinder
-import numpy as np
-import time
+from pyspark.ml.clustering import KMeans as SparkKMeans
+from pyspark.ml.linalg import DenseVector
+from pyspark.ml.functions import vector_to_array
 
 try:
     from graphviz import Source
-
     graphviz_available = True
 except Exception:
     graphviz_available = False
 
 
-# Serialize Tree for Broadcasting
+# -- Utility Functions --
 def serialize_tree(node):
     """Convert the tree object into a JSON-serializable dictionary."""
     if node is None:
@@ -41,11 +34,10 @@ def serialize_tree(node):
     }
 
 
-# Deserialize Tree for Prediction
 def _predict_subtree(node, features):
     """Recursively predict clusters based on the serialized tree."""
     if node is None or "feature" not in node:
-        return -1  # Return a default cluster if something is wrong
+        return -1  # Default cluster if something is wrong
 
     if node["left"] is None and node["right"] is None:
         return node["value"]
@@ -56,6 +48,7 @@ def _predict_subtree(node, features):
         return _predict_subtree(node["right"], features)
 
 
+# -- Node Class --
 class Node:
     def __init__(self):
         self.feature = None
@@ -64,7 +57,6 @@ class Node:
         self.mistakes = None
         self.left = None
         self.right = None
-        # TODO: Didn't check the BASE_TREE. Must check for max leaves condition if exkmc is to be implemented.
 
     def is_leaf(self):
         return (self.left is None) and (self.right is None)
@@ -81,12 +73,6 @@ class DistributedIMM:
     def __init__(self, spark, k, max_leaves=None, verbose=0, n_jobs=None, example_count=10000, split_count=32):
         """
         Initialize the DistributedIMM class with Spark session and parameters.
-
-        :param spark: SparkSession instance.
-        :param k: Number of clusters.
-        :param max_leaves: Maximum number of leaves allowed in the tree.
-        :param verbose: Verbosity level.
-        :param n_jobs: The number of jobs to run in parallel.
         """
         self.spark = spark
         self.k = k
@@ -99,35 +85,67 @@ class DistributedIMM:
         self.split_count = split_count
         self.histogram_example_count = example_count
         self.histogram = None
-        
 
+    # -- Helper Methods --
+    def _to_features_array(self, df: DataFrame) -> DataFrame:
+        """Ensure DataFrame has a 'features_array' column."""
+        if "features_array" not in df.columns:
+            df = df.withColumn("features_array", vector_to_array(col("features")))
+        return df
+
+    def _log_time(self, start_time, end_time, msg, verbose_level=2):
+        """Log elapsed time if verbosity is high enough."""
+        if self.verbose > verbose_level:
+            elapsed = end_time - start_time
+            minutes, seconds = divmod(elapsed, 60)
+            print(f"{msg}: {int(minutes)} minutes and {seconds:.2f} seconds")
+
+    def _predict_dataframe(self, x_data: DataFrame) -> DataFrame:
+        """Generate predictions and ensure features are in array format."""
+        return self._to_features_array(self.predict(x_data))
+
+    def _compute_cluster_means(self, predicted_data: DataFrame, feature_dim: int) -> DataFrame:
+        """Compute cluster means from predicted data."""
+        means_expr = [F.mean(col("features_array")[i]).alias(f"feature_{i}_mean") for i in range(feature_dim)]
+        cluster_means = predicted_data.groupBy("prediction").agg(*means_expr)
+        cluster_means = cluster_means.withColumn(
+            "cluster_mean", F.array(*[col(f"feature_{i}_mean") for i in range(feature_dim)])
+        )
+        return cluster_means.select("prediction", "cluster_mean")
+
+    def _join_exploded(self, df1: DataFrame, col1: str, df2: DataFrame, col2: str) -> DataFrame:
+        """
+        Explode two array columns and join them on prediction and position.
+        Returns a DataFrame with squared differences between the two arrays.
+        """
+        exploded1 = df1.selectExpr("prediction", f"posexplode({col1}) as (pos, val1)")
+        exploded2 = df2.selectExpr("prediction", f"posexplode({col2}) as (pos, val2)")
+        joined = exploded1.alias("a").join(
+            exploded2.alias("b"),
+            (col("a.prediction") == col("b.prediction")) & (col("a.pos") == col("b.pos"))
+        )
+        return joined.selectExpr("a.prediction as prediction", "(a.val1 - b.val2)*(a.val1 - b.val2) as squared_distance")
+
+    # -- Main Methods --
     def fit(self, x_data: DataFrame, kmeans_model=None):
         """
         Build a threshold tree from the training set x_data.
-        :param x_data: The training input samples as a Spark DataFrame.
-        :param kmeans_model: Pre-trained KMeans model (optional).
-        :return: Fitted threshold tree.
         """
         if self.verbose > 0:
             print("Running 'fit' method")
 
-        # TODO: Include KMedians
-        # Cluster data and prepare labeled dataset
+        # Cluster data using k-means if a model is not provided
         if kmeans_model is None:
             if self.verbose > 0:
-                print('Training kmeans with %d clusters' % self.k)
+                print(f"Training kmeans with {self.k} clusters")
             kmeans = SparkKMeans().setK(self.k).setSeed(1).setMaxIter(40).setFeaturesCol("features")
             kmeans_model = kmeans.fit(x_data)
         else:
-            assert kmeans_model.getK() == self.k, "Provided KMeans model must have the same number of clusters as 'k'"
-            kmeans_model = kmeans_model
+            assert kmeans_model.getK() == self.k, "KMeans model must have the same number of clusters as 'k'"
 
         # Get predictions and cluster centers
         clustered_data = kmeans_model.transform(x_data).select("features", "prediction")
-
-        # Get cluster centers as a Python list and broadcast it
         self.all_centers = kmeans_model.clusterCenters()
-        # TODO: NOT SURE IF THE FOLLOWING BROADCAST IS REALLY NEEDED. CENTERS ARE BROADCASTED INSIDE _find_best_split_distributed FUNCTION ALSO. CHECK IF THIS IS NEEDED.
         self.centers_broadcast = self.spark.sparkContext.broadcast(self.all_centers)
 
         if self.verbose > 3:
@@ -139,198 +157,122 @@ class DistributedIMM:
         feature_count = len(self.all_centers[0]) if self.all_centers else 0
         valid_cols = [True] * feature_count
 
-        # Add a weight column to the DataFrame (default weight = 1.0)
-        clustered_data_with_weight = clustered_data.withColumn("weight", lit(1.0))
+        # Add weight column
+        clustered_data = clustered_data.withColumn("weight", lit(1.0))
 
         Instance = namedtuple("Instance", ["features", "label", "weight"])
-
-        clustered_rdd = clustered_data_with_weight.rdd.map(
+        clustered_rdd = clustered_data.rdd.map(
             lambda row: Instance(DenseVector(row['features']), row['prediction'], row['weight'])
         )
 
-        # Initialize the root node and start building the tree
-        start_time = time.time()
+        # Build histogram for splitting
+        from d_imm.histogram import DecisionTreeSplitFinder
         split_finder = DecisionTreeSplitFinder(
             num_features=feature_count,
             is_continuous=valid_cols,
-            is_unordered=[False for _ in valid_cols],
-            max_splits_per_feature=[self.split_count] * feature_count,  # Default Value = 32
-            max_bins=self.split_count,  # Default Value = 32
-            total_weighted_examples=float(clustered_data_with_weight.count()),  # Use count for total weight
-            seed=42,  # Default Value = 42
+            is_unordered=[False] * feature_count,
+            max_splits_per_feature=[self.split_count] * feature_count,
+            max_bins=self.split_count,
+            total_weighted_examples=float(clustered_data.count()),
+            seed=42,
             example_count=self.histogram_example_count
         )
 
-        # Find splits using the split finder
         start_time = time.time()
         self.histogram = split_finder.find_splits(input_rdd=clustered_rdd)
-        end_time = time.time()
-
+        self._log_time(start_time, time.time(), "Time taken to build the histogram", verbose_level=2)
         if self.verbose > 2:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to build the histogram: {int(minutes)} minutes and {seconds:.2f} seconds")
             print("Histogram:", self.histogram)
-        
-        # self.histogram_broadcast = self.spark.sparkContext.broadcast(self.histogram)
 
-        self.tree = self._build_tree(clustered_data, valid_centers=valid_centers, valid_cols=valid_cols)
-        end_time = time.time()
-
+        # Build the decision tree
+        self.tree = self._build_tree(self._to_features_array(clustered_data), valid_centers, valid_cols)
         if self.verbose > 1:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to build the tree: {int(minutes)} minutes and {seconds:.2f} seconds")
-
-        # TODO: use vector_to_array before the build_tree method
-        clustered_data_vector = clustered_data.withColumn("features_array", vector_to_array("features"))
-
-        if self.verbose > 0:
-            print("Running '__fill_stats_distributed__' method")
-        start_time = time.time()
-        self.fill_stats_distributed(self.tree, clustered_data_vector)
-        end_time = time.time()
-
-        if self.verbose > 1:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to fill stats: {int(minutes)} minutes and {seconds:.2f} seconds")
-
-
-        if self.verbose > 0:
             print("Tree building completed.")
 
+        # Fill node statistics
+        start_time = time.time()
+        clustered_data = self._to_features_array(clustered_data)
+        self.fill_stats_distributed(self.tree, clustered_data)
+        self._log_time(start_time, time.time(), "Time taken to fill stats", verbose_level=1)
         return self
 
-    def _build_tree(self, x_data_with_y, valid_centers, valid_cols, depth=0):
+    def _build_tree(self, data: DataFrame, valid_centers, valid_cols, depth=0):
         """
         Recursively build the decision tree.
-
-        :param x_data_with_y: DataFrame containing features and cluster predictions.
-        :param valid_centers: List of boolean flags indicating valid cluster centers.
-        :param valid_cols: List of boolean flags indicating valid columns for splitting.
-        :param depth: Current depth of the tree (used to check max_leaves).
-        :return: Root node of the constructed subtree.
         """
-        # Count the number of samples in the current node
-        sample_count = x_data_with_y.count()
+        sample_count = data.count()
         if self.verbose > 2:
             print(f"Building node at depth {depth} with {sample_count} samples")
 
         node = Node()
-
-        # Check stopping conditions
         if sample_count == 0:
             node.value = 0
             return node
 
         if sum(valid_centers) == 1:
-            node.value = valid_centers.index(True)  # Assign single valid center label
-            return node
-
-        unique_labels = x_data_with_y.select("prediction").distinct().count()
-        if unique_labels == 1:
-            single_label = x_data_with_y.select("prediction").first()[0]
-            node.value = single_label
-            if self.verbose > 2:
-                print(f"Node is a leaf with cluster label: {single_label}")
-            return node
-
-        start_time = time.time()
-        split_info = self._find_best_split_distributed_histogram(x_data_with_y, valid_centers, valid_cols)
-        end_time = time.time()
-
-        if self.verbose > 2:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to find the best split: {int(minutes)} minutes and {seconds:.2f} seconds")
-
-        if not split_info:
-            # Default to the most frequent valid center if no split is found
             node.value = valid_centers.index(True)
             return node
 
-        # Extract split details
-        feature = split_info['feature']
-        threshold = split_info['threshold']
-        mistakes = split_info['mistakes']
-
-        node.set_condition(feature, threshold)
-        # Store mistakes directly in the node - may work for histograms
-        node.mistakes = mistakes
-
-        if self.verbose > 2:
-            print(f"Splitting on feature {feature} at threshold {threshold} with mistakes {mistakes}")
-
-        # Divide data into left and right nodes
-        # Convert `features` column to array if not already done
-        if "features_array" not in x_data_with_y.columns:
-            x_data_with_y = x_data_with_y.withColumn("features_array", vector_to_array(col("features")))
+        unique_labels = data.select("prediction").distinct().count()
+        if unique_labels == 1:
+            node.value = data.select("prediction").first()[0]
+            if self.verbose > 2:
+                print(f"Leaf node with label: {node.value}")
+            return node
 
         start_time = time.time()
-        left_data = x_data_with_y.filter(col("features_array").getItem(feature) <= threshold)
-        right_data = x_data_with_y.filter(col("features_array").getItem(feature) > threshold)
-        end_time = time.time()
+        split_info = self._find_best_split_distributed_histogram(data, valid_centers, valid_cols)
+        self._log_time(start_time, time.time(), "Time taken to find best split", verbose_level=2)
+
+        if not split_info:
+            node.value = valid_centers.index(True)
+            return node
+
+        # Set split condition
+        node.set_condition(split_info['feature'], split_info['threshold'])
+        node.mistakes = split_info['mistakes']
         if self.verbose > 2:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to filter left and right data: {int(minutes)} minutes and {seconds:.2f} seconds")
+            print(f"Splitting on feature {node.feature} at threshold {node.value} with mistakes {node.mistakes}")
 
-        start_time = time.time()
-        left_valid_centers, right_valid_centers = self._update_valid_centers(feature, threshold, valid_centers)
-        end_time = time.time()
-        if self.verbose > 2:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to update centers: {int(minutes)} minutes and {seconds:.2f} seconds")
+        # Ensure features_array is available
+        data = self._to_features_array(data)
+        left_data = data.filter(col("features_array").getItem(node.feature) <= node.value)
+        right_data = data.filter(col("features_array").getItem(node.feature) > node.value)
 
-        # Recursively build left and right child nodes
-        node.left = self._build_tree(left_data, left_valid_centers, valid_cols, depth + 1)
-        node.right = self._build_tree(right_data, right_valid_centers, valid_cols, depth + 1)
-
+        left_valid, right_valid = self._update_valid_centers(node.feature, node.value, valid_centers)
+        node.left = self._build_tree(left_data, left_valid, valid_cols, depth + 1)
+        node.right = self._build_tree(right_data, right_valid, valid_cols, depth + 1)
         return node
 
-    def _find_best_split_distributed_histogram(self, x_data, valid_centers, valid_cols):
+    def _find_best_split_distributed_histogram(self, data: DataFrame, valid_centers, valid_cols):
         """
-        Find the best split for a single node using histogram thresholds in a distributed fashion.
-        :param x_data: Spark DataFrame with features and cluster predictions.
-        :param valid_centers: List of valid cluster centers.
-        :param histograms: Precomputed histograms for each feature (list of lists of Split objects).
-        :return: Dictionary with keys 'feature', 'threshold', and 'mistakes'.
+        Find the best split using histogram thresholds in a distributed manner.
         """
         if self.verbose > 2:
-            print("Finding the best split using histogram thresholds in a distributed manner")
-
-        # Broadcast the centers, valid_centers, and histograms
-        centers_broadcast = self.spark.sparkContext.broadcast(np.array(self.all_centers))
-        valid_centers_broadcast = self.spark.sparkContext.broadcast(np.array(valid_centers, dtype=np.int32))
-        histograms_broadcast = self.spark.sparkContext.broadcast(self.histogram)
-        valid_cols_broadcast = self.spark.sparkContext.broadcast(np.array(valid_cols, dtype=np.int32))
-        njobs_broadcast = self.spark.sparkContext.broadcast(self.n_jobs)
+            print("Finding best split using histogram thresholds")
+        centers_b = self.spark.sparkContext.broadcast(np.array(self.all_centers))
+        valid_centers_b = self.spark.sparkContext.broadcast(np.array(valid_centers, dtype=np.int32))
+        hist_b = self.spark.sparkContext.broadcast(self.histogram)
+        valid_cols_b = self.spark.sparkContext.broadcast(np.array(valid_cols, dtype=np.int32))
+        njobs_b = self.spark.sparkContext.broadcast(self.n_jobs)
 
         def process_partition(iterator):
-            """
-            Function to process a partition of the data.
-            """
             import numpy as np
             from d_imm.splitters.cut_finder import get_all_mistakes_histogram
-
             rows = list(iterator)
             if not rows:
                 return []
-
             features = np.array([row.features for row in rows])
             predictions = np.array([row.prediction for row in rows], dtype=np.int32)
-
             try:
                 results = get_all_mistakes_histogram(
                     features,
                     predictions,
-                    centers_broadcast.value,
-                    valid_centers_broadcast.value,
-                    valid_cols_broadcast.value,
-                    histograms_broadcast.value,
-                    njobs=njobs_broadcast.value
+                    centers_b.value,
+                    valid_centers_b.value,
+                    valid_cols_b.value,
+                    hist_b.value,
+                    njobs=njobs_b.value
                 )
                 return results
             except Exception as e:
@@ -338,110 +280,50 @@ class DistributedIMM:
                 return []
 
         start_time = time.time()
-        results_rdd = x_data.rdd.mapPartitions(process_partition)
+        results_rdd = data.rdd.mapPartitions(process_partition)
         all_results = results_rdd.collect()
-        end_time = time.time()
+        self._log_time(start_time, time.time(), "Time to collect worker results", verbose_level=3)
 
-        if self.verbose > 3:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to collect results from worker nodes: {int(minutes)} minutes and {seconds:.2f} seconds")
+        # Flatten and aggregate results
+        flattened = all_results if isinstance(all_results[0], dict) else [r for part in all_results for r in part]
+        aggregated = defaultdict(lambda: {'feature': None, 'threshold': None, 'mistakes': 0})
+        for res in flattened:
+            key = (res['feature'], res['threshold'])
+            aggregated[key]['feature'] = res['feature']
+            aggregated[key]['threshold'] = res['threshold']
+            aggregated[key]['mistakes'] += res['mistakes']
 
-        start_time = time.time()
-        if isinstance(all_results[0], dict):
-            flattened_results = all_results
-        else:
-            # Otherwise, flatten the list of lists
-            flattened_results = [result for partition_results in all_results for result in partition_results]
-
-        if self.verbose > 3:
-            print(f"Flattened results: {flattened_results}")
-
-        # Aggregate mistakes for the same 'feature' and 'threshold'
-        aggregated_results = defaultdict(lambda: {'feature': None, 'threshold': None, 'mistakes': 0})
-
-        for result in flattened_results:
-            key = (result['feature'], result['threshold'])
-            aggregated_results[key]['feature'] = result['feature']
-            aggregated_results[key]['threshold'] = result['threshold']
-            aggregated_results[key]['mistakes'] += result['mistakes']
-
-        # Convert aggregated results back to a list
-        aggregated_results_list = list(aggregated_results.values())
-
-        if self.verbose > 3:
-            print(f"Aggregated results: {aggregated_results_list}")
-
-        if not aggregated_results_list:
+        aggregated_list = list(aggregated.values())
+        if not aggregated_list:
             raise ValueError("No valid splits found using histogram thresholds.")
-
-        # Find the best split (minimum mistakes)
-        best_split = min(aggregated_results_list, key=lambda x: x['mistakes'])
-
-        end_time = time.time()
+        best = min(aggregated_list, key=lambda x: x['mistakes'])
         if self.verbose > 3:
-            elapsed_time = (end_time - start_time)
-            minutes, seconds = divmod(elapsed_time, 60)
-            print(f"Time taken to aggregate results: {int(minutes)} minutes and {seconds:.2f} seconds")
-
-        if self.verbose > 3:
-            print(
-                f"Best split found: Feature {best_split['feature']}, "
-                f"Threshold {best_split['threshold']}, Mistakes {best_split['mistakes']}"
-            )
-
-        return {'feature': best_split['feature'], 'threshold': best_split['threshold'],
-                'mistakes': best_split['mistakes']}
+            print(f"Best split: Feature {best['feature']}, Threshold {best['threshold']}, Mistakes {best['mistakes']}")
+        return best
 
     def _update_valid_centers(self, feature, threshold, valid_centers):
-        """
-        Update valid centers for left and right nodes based on the chosen split.
+        """Update valid centers for left and right nodes based on the split condition."""
+        left_valid = [center and self.centers_broadcast.value[i][feature] <= threshold
+                      for i, center in enumerate(valid_centers)]
+        right_valid = [center and self.centers_broadcast.value[i][feature] > threshold
+                       for i, center in enumerate(valid_centers)]
+        return left_valid, right_valid
 
-        :param feature: Feature index used for splitting.
-        :param threshold: Threshold value for the split.
-        :param valid_centers: List of valid cluster centers.
-        :return: Tuple (left_valid_centers, right_valid_centers)
-        """
-        # Adjust valid centers based on split for left and right nodes
-        left_valid_centers = [center and self.centers_broadcast.value[i][feature] <= threshold for i, center in
-                              enumerate(valid_centers)]
-        right_valid_centers = [center and self.centers_broadcast.value[i][feature] > threshold for i, center in
-                               enumerate(valid_centers)]
-
-        return left_valid_centers, right_valid_centers
-
-    def fill_stats_distributed(self, node, clustered_data: DataFrame, label_col="prediction"):
-        """
-        Distributed version of __fill_stats__ for large datasets using PySpark.
-        Uses clustered_data which includes both vectorized features and labels.
-
-        :param node: Current node of the tree.
-        :param clustered_data: Spark DataFrame containing 'features' and cluster labels ('prediction').
-        :param label_col: Column name containing the cluster labels.
-        """
-
-        # Dynamically initialize feature importance if it's None
+    def fill_stats_distributed(self, node, data: DataFrame, label_col="prediction"):
+        """Fill node statistics in a distributed manner."""
+        data = self._to_features_array(data)
         if self._feature_importance is None:
-            feature_count = len(clustered_data.select("features").first()[0])
+            feature_count = len(data.select("features").first()[0])
             self._feature_importance = [0] * feature_count
 
-        # Total samples in the current node
-        node.samples = clustered_data.count()
-
-        # Process leaf nodes
+        node.samples = data.count()
         if node.is_leaf():
-            # Count mistakes: rows where the label does not match the node's value
-            node.mistakes = clustered_data.filter(F.col(label_col) != node.value).count()
+            node.mistakes = data.filter(F.col(label_col) != node.value).count()
         else:
-            # Update feature importance
-            if hasattr(self, '_feature_importance') and node.feature is not None:
+            if node.feature is not None:
                 self._feature_importance[node.feature] += 1
-
-            # Split data into left and right based on feature index and threshold
-            left_data = clustered_data.filter(F.col("features_array")[node.feature] <= node.value)
-            right_data = clustered_data.filter(F.col("features_array")[node.feature] > node.value)
-
-            # Recursively process left and right children
+            left_data = data.filter(F.col("features_array")[node.feature] <= node.value)
+            right_data = data.filter(F.col("features_array")[node.feature] > node.value)
             if node.left:
                 self.fill_stats_distributed(node.left, left_data, label_col)
             if node.right:
@@ -452,224 +334,106 @@ class DistributedIMM:
         return self._feature_importance
 
     def plot(self, filename="test", feature_names=None, view=True):
-        """
-        Plot the tree using Graphviz with a cleaner style.
-        :param filename: Name for the output file.
-        :param feature_names: Names of features for labeling.
-        :param view: Whether to view the plot after saving.
-        """
+        """Plot the tree using Graphviz."""
         if not self.tree:
             raise ValueError("Tree has not been built yet.")
 
-        dot_str = ["digraph ClusteringTree {\n"]
-        dot_str.append("node [shape=ellipse, style=filled, fillcolor=lightgrey, fontname=Helvetica];\n")
-
-        queue = [(self.tree, 0)]  # Node with its unique ID
+        dot_lines = [
+            "digraph ClusteringTree {",
+            "node [shape=ellipse, style=filled, fillcolor=lightgrey, fontname=Helvetica];"
+        ]
+        queue = [(self.tree, 0)]
         nodes = []
         edges = []
-
         while queue:
             current, node_id = queue.pop(0)
-
-            # Prepare label
             if current.feature is not None:
-                label = (
-                    f"{feature_names[current.feature] if feature_names else current.feature} "
-                    f"<= {current.value:.3f}\\n"
-                    f"samples={current.samples}\\n"
-                    f"mistakes={current.mistakes}"
-                )
-            else:  # Leaf node
-                label = (
-                    f"{current.value}\\n"
-                    f"samples={current.samples}\\n"
-                    f"mistakes={current.mistakes}"
-                )
+                feat_name = feature_names[current.feature] if feature_names else current.feature
+                label = f"{feat_name} <= {current.value:.3f}\\n" \
+                        f"samples={current.samples}\\nmistakes={current.mistakes}"
+            else:
+                label = f"{current.value}\\n" \
+                        f"samples={current.samples}\\nmistakes={current.mistakes}"
             nodes.append((node_id, label))
-
-            # Add children to the queue
             if current.left:
-                left_id = len(nodes) + len(queue)  # Unique ID
+                left_id = len(nodes) + len(queue)
                 queue.append((current.left, left_id))
                 edges.append((node_id, left_id))
             if current.right:
-                right_id = len(nodes) + len(queue)  # Unique ID
+                right_id = len(nodes) + len(queue)
                 queue.append((current.right, right_id))
                 edges.append((node_id, right_id))
-
-        # Convert nodes and edges into dot format for Graphviz
-        for node_id, label in nodes:
-            dot_str.append(f"n_{node_id} [label=\"{label}\"];\n")
+        for nid, label in nodes:
+            dot_lines.append(f"n_{nid} [label=\"{label}\"];")
         for parent, child in edges:
-            dot_str.append(f"n_{parent} -> n_{child};\n")
-        dot_str.append("}")
-
-        dot_str = "".join(dot_str)
-
+            dot_lines.append(f"n_{parent} -> n_{child};")
+        dot_lines.append("}")
+        dot_str = "\n".join(dot_lines)
         try:
-            from graphviz import Source
             s = Source(dot_str, filename=filename + '.gv', format="png")
             s.render(view=view)
         except ImportError:
-            print("Graphviz not available; outputting DOT file as plain text.")
+            print("Graphviz not available; DOT file output:")
             print(dot_str)
 
     def predict(self, x_data: DataFrame):
-        """Predict clusters for x_data using a Pandas UDF."""
-        x_data = x_data.withColumn("features_array", vector_to_array("features"))
-
-        # **Broadcast the serialized tree**
-        serialized_tree = serialize_tree(self.tree)
-        tree_broadcast = self.spark.sparkContext.broadcast(serialized_tree)
+        """Predict clusters using a Pandas UDF and a broadcasted serialized tree."""
+        x_data = self._to_features_array(x_data)
+        serialized = serialize_tree(self.tree)
+        tree_b = self.spark.sparkContext.broadcast(serialized)
 
         @pandas_udf(IntegerType())
         def predict_batch(features_batch: pd.Series) -> pd.Series:
-            tree = tree_broadcast.value
+            tree = tree_b.value
             return features_batch.apply(lambda features: _predict_subtree(tree, np.array(features)))
-
         return x_data.withColumn("prediction", predict_batch(col("features_array")))
 
     def score(self, x_data: DataFrame):
-        """Compute k-means cost."""
-
-        predicted_data = self.predict(x_data)
-
-        # Convert 'features' column (DenseVector) to an array for aggregation
-        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
-
-        # Get feature dimension from cluster centers
+        """Compute k-means cost based on computed cluster means."""
+        predicted = self._predict_dataframe(x_data)
         feature_dim = len(self.all_centers[0])
-
-        # Compute mean for each feature separately
-        cluster_means = predicted_data.groupBy("prediction").agg(
-            *[F.mean(col("features_array")[i]).alias(f"feature_{i}_mean") for i in range(feature_dim)]
-        )
-
-        # Reconstruct the feature vector as an array
-        cluster_means = cluster_means.withColumn(
-            "cluster_mean", F.array(*[col(f"feature_{i}_mean") for i in range(feature_dim)])
-        ).select("prediction", "cluster_mean")
-
-        # Join with predicted clusters
-        predicted_data = predicted_data.join(cluster_means, "prediction")
-
-        # Broadcast centers as a NumPy list
-        centers_broadcast = self.spark.sparkContext.broadcast(self.all_centers)
-
+        cluster_means = self._compute_cluster_means(predicted, feature_dim)
+        predicted = predicted.join(cluster_means, "prediction")
         @udf(DoubleType())
-        def squared_distance(features, center):
-            return float(np.linalg.norm(np.array(features) - np.array(center)) ** 2)
-
-        # Compute squared Euclidean distance
-        cost_df = predicted_data.withColumn(
-            "squared_distance", squared_distance(col("features_array"), col("cluster_mean"))
-        )
-
-        # Sum squared distances
+        def squared_distance(feat, center):
+            return float(np.linalg.norm(np.array(feat) - np.array(center)) ** 2)
+        cost_df = predicted.withColumn("squared_distance", squared_distance(col("features_array"), col("cluster_mean")))
         return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
 
     def surrogate_score(self, x_data: DataFrame):
-        """Compute k-means surrogate cost."""
-
-        predicted_data = self.predict(x_data)
-
-        # Convert `features` column (DenseVector) to an array for calculations
-        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
-
-        # Broadcast cluster centers as a NumPy list
-        centers_broadcast = self.spark.sparkContext.broadcast(self.all_centers)
-
+        """Compute surrogate k-means cost using original cluster centers."""
+        predicted = self._predict_dataframe(x_data)
+        centers_b = self.spark.sparkContext.broadcast(self.all_centers)
         @udf(DoubleType())
-        def squared_distance_to_center(features, cluster):
-            center = centers_broadcast.value[cluster]
-            return float(np.linalg.norm(np.array(features) - np.array(center)) ** 2)
-
-        # Compute squared Euclidean distance
-        cost_df = predicted_data.withColumn(
-            "squared_distance", squared_distance_to_center(col("features_array"), col("prediction"))
-        )
-
-        # Sum squared distances
+        def squared_distance_to_center(feat, cluster):
+            center = centers_b.value[cluster]
+            return float(np.linalg.norm(np.array(feat) - np.array(center)) ** 2)
+        cost_df = predicted.withColumn("squared_distance",
+                                       squared_distance_to_center(col("features_array"), col("prediction")))
         return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
 
     def score_sql(self, x_data: DataFrame):
-        """
-        Compute the k-means cost using Spark SQL.
-        :param x_data: The input samples as a Spark DataFrame.
-        :return: k-means cost.
-        """
-        predicted_data = self.predict(x_data)
-
-        # Convert `features` into an array
-        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
-
+        """Compute k-means cost using Spark SQL."""
+        predicted = self._predict_dataframe(x_data)
         feature_dim = len(self.all_centers[0])
-
-        # Compute mean for each feature separately
-        cluster_means = predicted_data.groupBy("prediction").agg(
-            *[F.mean(col("features_array")[i]).alias(f"feature_{i}_mean") for i in range(feature_dim)]
-        )
-
-        # Reconstruct the feature vector as an array
-        cluster_means = cluster_means.withColumn(
-            "cluster_mean", F.array(*[col(f"feature_{i}_mean") for i in range(feature_dim)])
-        ).select("prediction", "cluster_mean")
-
-        # Join with predicted clusters
-        predicted_data = predicted_data.join(cluster_means, "prediction")
-
-        # **Fix: Replace array_zip() with posexplode()**
-        exploded_features = predicted_data.selectExpr("prediction", "posexplode(features_array)")
-        exploded_means = cluster_means.selectExpr("prediction", "posexplode(cluster_mean)")
-
-        # Join on index (pos) to align feature values and cluster means
-        joined = exploded_features.alias("a").join(
-            exploded_means.alias("b"),
-            (col("a.prediction") == col("b.prediction")) & (col("a.pos") == col("b.pos"))
-        ).selectExpr("a.prediction", "(a.col - b.col) * (a.col - b.col) as squared_distance")
-
-        # Compute total cost
+        cluster_means = self._compute_cluster_means(predicted, feature_dim)
+        predicted = predicted.join(cluster_means, "prediction")
+        joined = self._join_exploded(predicted, "features_array", cluster_means, "cluster_mean")
         total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
             .agg(F.sum("total_cost")).collect()[0][0]
-
         return total_cost
 
     def surrogate_score_sql(self, x_data: DataFrame):
-        """
-        Compute the k-means surrogate cost in a distributed manner using Spark SQL.
-        :param x_data: The input samples as a Spark DataFrame.
-        :return: k-means surrogate cost.
-        """
-        predicted_data = self.predict(x_data)
-
-        # Convert `features` into an array
-        predicted_data = predicted_data.withColumn("features_array", vector_to_array("features"))
-
-        # **Explicitly define schema for centers_df**
+        """Compute surrogate k-means cost using Spark SQL and original centers."""
+        predicted = self._predict_dataframe(x_data)
         schema = StructType([
             StructField("prediction", IntegerType(), False),
-            StructField("center", ArrayType(DoubleType()), False)  # Explicitly define array schema
+            StructField("center", ArrayType(DoubleType()), False)
         ])
-
-        # Convert cluster centers into a DataFrame with correct schema
         centers_data = [(i, list(map(float, center))) for i, center in enumerate(self.all_centers)]
         centers_df = self.spark.createDataFrame(centers_data, schema=schema)
-
-        # Join cluster centers with predicted data
-        predicted_data = predicted_data.join(centers_df, "prediction")
-
-        # **Fix: Replace array_zip() with posexplode()**
-        exploded_features = predicted_data.selectExpr("prediction", "posexplode(features_array)")
-        exploded_centers = centers_df.selectExpr("prediction", "posexplode(center)")
-
-        # Join on index (pos) to align feature values and cluster centers
-        joined = exploded_features.alias("a").join(
-            exploded_centers.alias("b"),
-            (col("a.prediction") == col("b.prediction")) & (col("a.pos") == col("b.pos"))
-        ).selectExpr("a.prediction", "(a.col - b.col) * (a.col - b.col) as squared_distance")
-
-        # Compute total cost
+        predicted = predicted.join(centers_df, "prediction")
+        joined = self._join_exploded(predicted, "features_array", centers_df, "center")
         total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
             .agg(F.sum("total_cost")).collect()[0][0]
-
         return total_cost
