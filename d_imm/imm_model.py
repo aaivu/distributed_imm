@@ -390,6 +390,7 @@ class DistributedIMM:
 
     def score(self, x_data: DataFrame):
         """Compute k-means cost based on computed cluster means."""
+        start_time = time.time()
         predicted = self._predict_dataframe(x_data)
         feature_dim = len(self.all_centers[0])
         cluster_means = self._compute_cluster_means(predicted, feature_dim)
@@ -398,10 +399,13 @@ class DistributedIMM:
         def squared_distance(feat, center):
             return float(np.linalg.norm(np.array(feat) - np.array(center)) ** 2)
         cost_df = predicted.withColumn("squared_distance", squared_distance(col("features_array"), col("cluster_mean")))
-        return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+        score = cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+        self._log_time(start_time, time.time(), "Time taken to calculate score", verbose_level=2)
+        return score
 
     def surrogate_score(self, x_data: DataFrame):
         """Compute surrogate k-means cost using original cluster centers."""
+        start_time = time.time()
         predicted = self._predict_dataframe(x_data)
         centers_b = self.spark.sparkContext.broadcast(self.all_centers)
         @udf(DoubleType())
@@ -410,10 +414,13 @@ class DistributedIMM:
             return float(np.linalg.norm(np.array(feat) - np.array(center)) ** 2)
         cost_df = predicted.withColumn("squared_distance",
                                        squared_distance_to_center(col("features_array"), col("prediction")))
-        return cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+        surrogate_score = cost_df.agg(F.sum("squared_distance")).collect()[0][0]
+        self._log_time(start_time, time.time(), "Time taken to calculate surrogate score", verbose_level=2)
+        return surrogate_score
 
     def score_sql(self, x_data: DataFrame):
         """Compute k-means cost using Spark SQL."""
+        start_time = time.time()
         predicted = self._predict_dataframe(x_data)
         feature_dim = len(self.all_centers[0])
         cluster_means = self._compute_cluster_means(predicted, feature_dim)
@@ -421,10 +428,12 @@ class DistributedIMM:
         joined = self._join_exploded(predicted, "features_array", cluster_means, "cluster_mean")
         total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
             .agg(F.sum("total_cost")).collect()[0][0]
+        self._log_time(start_time, time.time(), "Time taken to calculate score", verbose_level=2)
         return total_cost
 
     def surrogate_score_sql(self, x_data: DataFrame):
         """Compute surrogate k-means cost using Spark SQL and original centers."""
+        start_time = time.time()
         predicted = self._predict_dataframe(x_data)
         schema = StructType([
             StructField("prediction", IntegerType(), False),
@@ -436,4 +445,5 @@ class DistributedIMM:
         joined = self._join_exploded(predicted, "features_array", centers_df, "center")
         total_cost = joined.groupBy("prediction").agg(F.sum("squared_distance").alias("total_cost")) \
             .agg(F.sum("total_cost")).collect()[0][0]
+        self._log_time(start_time, time.time(), "Time taken to calculate surrogate score", verbose_level=2)
         return total_cost
