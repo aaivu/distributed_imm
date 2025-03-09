@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import math
-import random
 from collections import defaultdict, namedtuple
 from pyspark.rdd import RDD
-from pyspark.sql import SparkSession
 
 # Define a small epsilon for floating-point comparisons
 EPSILON = 1e-9
@@ -22,8 +19,6 @@ class DecisionTreeSplitFinder:
     def __init__(
         self,
         num_features: int,
-        is_continuous: list,
-        is_unordered: list,
         max_splits_per_feature: list,
         max_bins: int,
         total_weighted_examples: float,
@@ -43,57 +38,58 @@ class DecisionTreeSplitFinder:
         :param seed: Random seed for reproducibility during sampling.
         """
         self.num_features = num_features
-        self.is_continuous = is_continuous
-        self.is_unordered = is_unordered
         self.max_splits_per_feature = max_splits_per_feature
         self.max_bins = max_bins
         self.total_weighted_examples = total_weighted_examples
         self.seed = seed
         self.example_count = example_count
 
-    def find_splits(self, input_rdd: RDD) -> list:
+    def find_splits(self, sampled_input_rdd: RDD) -> list:
         """
-        Public method to find splits for decision tree calculation.
+        Computes split thresholds for continuous features by sorting and aggregating.
 
-        :param input_rdd: RDD of Instance objects.
-        :return: A 2D list (list of lists) of Split objects [featureIndex -> list of Splits].
+        :param sampled_input_rdd: RDD of Instance objects.
+        :return: A 2D list of Split objects, where the outer list is indexed by feature, 
+                 and the inner list contains splits for that feature.
         """
-        return self._find_splits_by_sorting(input_rdd)
 
-    def _samples_fraction_for_find_splits(self, max_bins: int, num_examples: int) -> float:
-        """
-        Calculate the subsample fraction for finding splits based on max_bins and num_examples.
-
-        :param max_bins: Maximum number of bins used for splitting.
-        :param num_examples: Number of examples (rows) in the dataset.
-        :return: A float representing the fraction of data to use.
-        """
-        required_samples = max(max_bins * max_bins, self.example_count)
-        if required_samples < num_examples:
-            return float(required_samples) / num_examples
-        else:
-            return 1.0
-
-    def _find_splits_for_continuous_feature_values(self, feature_values) -> list:
-        """
-        Aggregates continuous feature values and counts, then computes split thresholds.
-
-        :param feature_values: An iterable of numeric values (floats).
-        :return: A list of Split objects representing split thresholds.
-        """
-        # Aggregate values into a dictionary: {feature_value -> total_count}
-        value_counts = defaultdict(int)
-        count = 0
-
-        for v in feature_values:
-            value_counts[v] += 1  # Each data point has weight = 1
-            count += 1
-
-        # Convert to a normal dict and call the helper function
-        return self._find_splits_for_continuous_feature_weights(
-            part_value_weights=dict(value_counts),
-            count=count
+        # Extract feature-value pairs for all instances
+        feature_value_pairs = (
+            sampled_input_rdd
+            .flatMap(lambda inst: [(i, inst.features[i]) for i in range(self.num_features)])
+            .filter(lambda x: x[1] != 0.0)  # Optionally filter out zero values
         )
+
+        # Aggregate counts for each feature-value pair
+        feature_aggregates = (
+            feature_value_pairs
+            .map(lambda x: ((x[0], x[1]), 1))  # ((featureIndex, featureValue), 1)
+            .reduceByKey(lambda a, b: a + b)  # ((featureIndex, featureValue), count)
+            .map(lambda x: (x[0][0], (x[0][1], x[1])))  # (featureIndex, (featureValue, count))
+        )
+
+        # Collect as a dictionary: { featureIndex -> list of (featureValue, count) }
+        feature_value_counts = feature_aggregates.groupByKey().mapValues(list).collectAsMap()
+
+        # Compute splits for each feature
+        all_splits = []
+        for fidx in range(self.num_features):
+            value_weight_map = {v: c for v, c in feature_value_counts.get(fidx, [])}
+            splits = self._find_splits_for_continuous_feature_weights(
+                part_value_weights=value_weight_map,
+                count=sum(value_weight_map.values())
+            )
+            # Assign feature index to each split
+            all_splits.append([
+                Split(
+                    feature_index=fidx,
+                    threshold=s.threshold,
+                    categories=None,
+                    is_continuous=True
+                ) for s in splits
+            ])
+
+        return all_splits
 
     def _find_splits_for_continuous_feature_weights(
         self,
@@ -189,83 +185,16 @@ class DecisionTreeSplitFinder:
 
         return splits_builder
 
-
-    def _find_splits_by_sorting(self, sampled_input_rdd: RDD) -> list:
+    def _samples_fraction_for_find_splits(self, max_bins: int, num_examples: int) -> float:
         """
-        Finds split thresholds for both continuous and categorical features by sorting and aggregating.
+        Calculate the subsample fraction for finding splits based on max_bins and num_examples.
 
-        :param sampled_input_rdd: RDD of Instance objects.
-        :return: A 2D list of Split objects. Outer list is indexed by feature, inner list contains splits for that feature.
+        :param max_bins: Maximum number of bins used for splitting.
+        :param num_examples: Number of examples (rows) in the dataset.
+        :return: A float representing the fraction of data to use.
         """
-        # 1. Identify continuous and categorical features
-        continuous_features = [i for i, cont in enumerate(self.is_continuous) if cont]
-        # categorical_features = [i for i, cont in enumerate(self.is_continuous) if not cont]
-
-        # 2. Handle continuous features
-        continuous_splits = self._find_splits_for_continuous_features(sampled_input_rdd, continuous_features)
-
-        # 4. Combine splits for all features
-        all_splits = []
-        for fidx in range(self.num_features):
-            if self.is_continuous[fidx]:
-                all_splits.append(continuous_splits.get(fidx, []))
-
-        return all_splits
-
-    def _find_splits_for_continuous_features(
-        self,
-        sampled_input_rdd: RDD,
-        continuous_features: list
-    ) -> dict:
-        """
-        Finds splits for continuous features.
-
-        :param sampled_input_rdd: RDD of Instance objects.
-        :param continuous_features: List of feature indices that are continuous.
-        :return: Dictionary mapping feature index to list of Split objects.
-        """
-        if not continuous_features:
-            return {}
-
-        # For each Instance, emit (featureIndex, featureValue)
-        feature_value_pairs = (
-            sampled_input_rdd
-            .flatMap(lambda inst: [
-                (i, inst.features[i])
-                for i in continuous_features
-            ])
-            .filter(lambda x: x[1] != 0.0)  # Optionally filter out zero values
-        )
-
-        # Aggregate counts for each feature and value
-        feature_aggregates = (
-            feature_value_pairs
-            .map(lambda x: (x[0], x[1]))  # (featureIndex, featureValue)
-            .map(lambda x: ((x[0], x[1]), 1))  # ((featureIndex, featureValue), 1)
-            .reduceByKey(lambda a, b: a + b)  # ((featureIndex, featureValue), count)
-            .map(lambda x: (x[0][0], (x[0][1], x[1])))  # (featureIndex, (featureValue, count))
-        )
-
-        # Collect as map: { featureIndex -> list of (featureValue, count) }
-        feature_value_counts = feature_aggregates.groupByKey().mapValues(list).collectAsMap()
-
-        # Now compute splits for each continuous feature
-        continuous_splits = {}
-        for fidx in continuous_features:
-            value_weight_map = {v: c for v, c in feature_value_counts.get(fidx, [])}
-            splits = self._find_splits_for_continuous_feature_weights(
-                part_value_weights=value_weight_map,
-                count=sum(value_weight_map.values())
-            )
-            # Assign the correct feature index to each split
-            splits_with_index = [
-                Split(
-                    feature_index=fidx,
-                    threshold=s.threshold,
-                    categories=None,
-                    is_continuous=True
-                ) for s in splits
-            ]
-            continuous_splits[fidx] = splits_with_index
-
-        return continuous_splits
+        required_samples = max(max_bins * max_bins, self.example_count)
+        if required_samples < num_examples:
+            return float(required_samples) / num_examples
+        else:
+            return 1.0
