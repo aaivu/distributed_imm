@@ -158,28 +158,28 @@ class DistributedIMM:
         valid_cols = [True] * feature_count
 
         # Add weight column
-        clustered_data = clustered_data.withColumn("weight", lit(1.0))
+        sampled_clustered_data = clustered_data.sample(fraction=0.1, seed=42)
+        sampled_clustered_data = sampled_clustered_data.withColumn("weight", lit(1.0))
 
         Instance = namedtuple("Instance", ["features", "label", "weight"])
-        clustered_rdd = clustered_data.rdd.map(
+        sampled_clustered_rdd = sampled_clustered_data.rdd.map(
             lambda row: Instance(DenseVector(row['features']), row['prediction'], row['weight'])
         )
 
+        
         # Build histogram for splitting
         from d_imm.histogram import DecisionTreeSplitFinder
         split_finder = DecisionTreeSplitFinder(
             num_features=feature_count,
-            is_continuous=valid_cols,
-            is_unordered=[False] * feature_count,
             max_splits_per_feature=[self.split_count] * feature_count,
             max_bins=self.split_count,
-            total_weighted_examples=float(clustered_data.count()),
+            total_weighted_examples=float(sampled_clustered_data.count()),
             seed=42,
             example_count=self.histogram_example_count
         )
-
+        
         start_time = time.time()
-        self.histogram = split_finder.find_splits(input_rdd=clustered_rdd)
+        self.histogram = split_finder.find_splits(input_rdd=sampled_clustered_rdd)
         self._log_time(start_time, time.time(), "Time taken to build the histogram", verbose_level=2)
         if self.verbose > 2:
             print("Histogram:", self.histogram)
