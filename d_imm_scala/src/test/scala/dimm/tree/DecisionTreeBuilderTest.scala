@@ -45,7 +45,7 @@ class DecisionTreeBuilderTest extends AnyFunSuite {
     val rdd = sc.parallelize(instances)
 
     val numFeatures = 1
-    val numSplits = 4
+    val numSplits = 8
     val maxBins = 32
     val numExamples = instances.length
     val weightedNumExamples = instances.map(_.weight).sum
@@ -60,7 +60,11 @@ class DecisionTreeBuilderTest extends AnyFunSuite {
       weightedNumExamples = weightedNumExamples,
       seed = 42L
     )
-
+    println("\n===== Candidate Splits =====")
+        splits.zipWithIndex.foreach { case (splitArr, featureIdx) =>
+        println(s"Feature $featureIdx splits:")
+        splitArr.foreach(split => println(s"  $split"))
+        }
     val builder = new DecisionTreeBuilder(maxDepth = 3)
     val root = builder.buildTree(instances.toArray, centers, splits)
 
