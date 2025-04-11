@@ -2,14 +2,15 @@ package dimm.binning
 
 import dimm.core.Instance
 import dimm.tree.ContinuousSplit
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import scala.collection.mutable
-import scala.collection.mutable.OpenHashMap
 
 object FindSplits {
 
   def findSplits(
       input: RDD[Instance],
+      clusterCenters: Array[Vector],                        // ADDED
       numFeatures: Int,
       numSplits: Int,
       maxBins: Int,
@@ -29,30 +30,43 @@ object FindSplits {
     val numPartitions = math.min(numFeatures, sampledInput.partitions.length)
 
     val featureValueWeights = sampledInput.flatMap { instance =>
-        continuousFeatures.map { featureIndex =>
-            (featureIndex, (instance.features(featureIndex), instance.weight))
-        }.filter(_._2._1 != 0.0)
-        }.aggregateByKey((mutable.Map.empty[Double, Double], 0L), numPartitions)(
-        seqOp = { case ((map, count), (v, w)) =>
-            map.update(v, map.getOrElse(v, 0.0) + w)
-            (map, count + 1L)
-        },
-        combOp = { case ((map1, c1), (map2, c2)) =>
-            map2.foreach { case (v, w) =>
-            map1.update(v, map1.getOrElse(v, 0.0) + w)
-            }
-            (map1, c1 + c2)
+      continuousFeatures.map { featureIndex =>
+        (featureIndex, (instance.features(featureIndex), instance.weight))
+      }.filter(_._2._1 != 0.0)
+    }.aggregateByKey((mutable.Map.empty[Double, Double], 0L), numPartitions)(
+      seqOp = { case ((map, count), (v, w)) =>
+        map.update(v, map.getOrElse(v, 0.0) + w)
+        (map, count + 1L)
+      },
+      combOp = { case ((map1, c1), (map2, c2)) =>
+        map2.foreach { case (v, w) =>
+          map1.update(v, map1.getOrElse(v, 0.0) + w)
         }
-        ).collectAsMap()
-    
-    val splitsByFeature: Array[Array[ContinuousSplit]] = Array.tabulate(numFeatures) { featureIndex =>
-    featureValueWeights.get(featureIndex) match {
-        case Some((valueMap: scala.collection.Map[Double, Double], count: Long)) =>
-        val thresholds = findThresholdsForFeature(valueMap.toMap, count, numSplits, maxBins, weightedNumExamples)
-        thresholds.map(t => ContinuousSplit(featureIndex, t))
-        case _ =>
-        Array.empty[ContinuousSplit]
+        (map1, c1 + c2)
+      }
+    ).collectAsMap()
+
+    // Collect cluster center values per feature
+    val centerValuesByFeature: Array[mutable.Set[Double]] = Array.fill(numFeatures)(mutable.Set.empty[Double])
+    clusterCenters.foreach { center =>
+      for (f <- 0 until numFeatures) {
+        val value = center(f)
+        if (value != 0.0) centerValuesByFeature(f).add(value)
+      }
     }
+
+    val splitsByFeature: Array[Array[ContinuousSplit]] = Array.tabulate(numFeatures) { featureIndex =>
+      val centerSplits = centerValuesByFeature(featureIndex)
+
+      featureValueWeights.get(featureIndex) match {
+        case Some((valueMap: scala.collection.Map[Double, Double], count: Long)) =>
+          val dataSplits = findThresholdsForFeature(valueMap.toMap, count, numSplits, maxBins, weightedNumExamples)
+          val allSplits = dedup((dataSplits ++ centerSplits).toArray)
+          allSplits.map(t => ContinuousSplit(featureIndex, t))
+        case _ =>
+          val allSplits = dedup(centerSplits.toArray)
+          allSplits.map(t => ContinuousSplit(featureIndex, t))
+      }
     }
 
     splitsByFeature
@@ -110,5 +124,11 @@ object FindSplits {
     } else {
       1.0
     }
+  }
+
+  private def dedup(thresholds: Array[Double], tol: Double = 1e-9): Array[Double] = {
+    thresholds.sorted.foldLeft(Vector.empty[Double]) { (acc, v) =>
+      if (acc.isEmpty || math.abs(acc.last - v) > tol) acc :+ v else acc
+    }.toArray
   }
 }
