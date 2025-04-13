@@ -1,0 +1,44 @@
+package dimm.core
+
+import dimm.binning.FindSplits
+import dimm.core.{BinnedCenter, BinnedInstance}
+import dimm.stats.{NodeStatsCollector, SplitEvaluator, BestSplitPerNodeSelector, BestSplitDecision}
+import dimm.split.InstanceSplitter
+import dimm.tree.{Node, TreeBuilder}
+import org.apache.spark.rdd.RDD
+
+object IMMIteration {
+
+  def runIteration(
+      instances: RDD[BinnedInstance],
+      centers: RDD[BinnedCenter],
+      tree: Map[Int, Node],
+      splits: Array[Array[dimm.tree.ContinuousSplit]],
+      nodeIdCounter: Int
+  ): (RDD[BinnedInstance], Map[Int, Node], Int, Boolean) = {
+
+    // Step 1: Compute node-feature stats
+    val nodeFeatureStats = NodeStatsCollector.computeStats(instances, centers, splits)
+
+    // Step 2: Evaluate best split per feature
+    val statsWithBestSplits = SplitEvaluator.evaluate(nodeFeatureStats)
+
+    // Step 3: Pick best feature-split per node
+    val bestSplitMap: Map[Int, BestSplitDecision] = BestSplitPerNodeSelector.selectBestPerNode(statsWithBestSplits)
+
+    if (bestSplitMap.isEmpty) {
+      println("No more splittable nodes.")
+      return (instances, tree, nodeIdCounter, true)
+    }
+
+    // Step 4: Reassign instances + mark mistakes
+    val centerMap = centers.map(c => c.clusterId -> c).collect().toMap
+    val (updatedInstances, nextNodeIdCounter) =
+      InstanceSplitter.updateInstances(instances, bestSplitMap, centerMap, nodeIdCounter)
+
+    // Step 5: Update tree structure
+    val updatedTree = TreeBuilder.updateTree(tree, bestSplitMap, updatedInstances)
+
+    (updatedInstances, updatedTree, nextNodeIdCounter, false)
+  }
+}

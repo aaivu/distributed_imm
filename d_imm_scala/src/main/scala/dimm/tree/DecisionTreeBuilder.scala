@@ -1,95 +1,62 @@
-// package dimm.tree
+package dimm.tree
 
-// import dimm.core.{Instance, ClusterCenter, MistakeCounter}
-// import dimm.tree.ContinuousSplit
-// import MistakeCounter.SplitResult
+import dimm.core.BinnedInstance
+import dimm.stats.BestSplitDecision
+import org.apache.spark.rdd.RDD
 
-// // Version 1
-// class DecisionTreeBuilder(
-//   maxDepth: Int
-// ) {
+object TreeBuilder {
 
-//   private var nodeIdCounter: Int = 0
+  def updateTree(
+      currentTree: Map[Int, Node],
+      bestSplits: Map[Int, BestSplitDecision],
+      updatedInstances: RDD[BinnedInstance]
+  ): Map[Int, Node] = {
 
-//   def buildTree(
-//       instances: Array[Instance],
-//       centers: Array[ClusterCenter],
-//       splits: Array[Array[ContinuousSplit]]
-//   ): Node = {
-//     buildNode(instances, centers, depth = 0, splits, mistakes = 0)
-//   }
+    // Step 1: Get clusterIds assigned to each node after the split
+    val clusterAssignments = updatedInstances
+      .filter(_.isValid)
+      .map(inst => (inst.nodeId, inst.clusterId))
+      .distinct()
+      .groupByKey()
+      .mapValues(_.toSet)
+      .collect()
+      .toMap
 
-//   private def buildNode(
-//     instances: Array[Instance],
-//     centers: Array[ClusterCenter],
-//     depth: Int,
-//     splits: Array[Array[ContinuousSplit]],
-//     mistakes: Int
-//     ): Node = {
-//     val validPoints = instances.filter(_.isValid)
-//     val node = Node(
-//         id = nextNodeId(),
-//         depth = depth,
-//         points = validPoints,
-//         centers = centers,
-//     )
+    // Step 2: Build updated nodes
+    var newTree = currentTree
 
-//     if (depth >= maxDepth || node.shouldStopSplitting || validPoints.isEmpty) {
-//         return node.markAsLeaf()
-//     }
+    for ((nodeId, decision) <- bestSplits) {
+      val parentNode = currentTree(nodeId)
 
-//     var bestSplit: Option[ContinuousSplit] = None
-//     var bestResult: Option[SplitResult] = None
-//     var minMistakes: Int = Int.MaxValue
+      val leftChildId = nodeId * 2 + 1
+      val rightChildId = nodeId * 2 + 2
 
-//     for (featureIndex <- splits.indices) {
-//         // ---- 1. Extract valid thresholds from global splits
-//         val originalSplits = splits(featureIndex).map(_.threshold)
+      val leftClusters = clusterAssignments.getOrElse(leftChildId, Set.empty)
+      val rightClusters = clusterAssignments.getOrElse(rightChildId, Set.empty)
 
-//         // ---- 2. Add cluster center values for this feature
-//         val centerFeatureValues = centers.map(_.features(featureIndex))
+      val leftChild = Node(
+        id = leftChildId,
+        depth = parentNode.depth + 1,
+        clusterIds = leftClusters,
+        isLeaf = leftClusters.size <= 1
+      )
 
-//         // ---- 3. Combine & filter within center value range
-//         val minCenterVal = centerFeatureValues.min
-//         val maxCenterVal = centerFeatureValues.max
+      val rightChild = Node(
+        id = rightChildId,
+        depth = parentNode.depth + 1,
+        clusterIds = rightClusters,
+        isLeaf = rightClusters.size <= 1
+      )
 
-//         // TODO
-//         val combinedThresholds = (originalSplits ++ centerFeatureValues)
-//         .filter(t => t >= minCenterVal && t < maxCenterVal)
-//         .distinct
+      val updatedParent = parentNode
+        .withSplit(decision.split)
+        .withChildren(leftChild, rightChild)
 
-//         // ---- 4. Count mistakes for each candidate threshold
-//         for (threshold <- combinedThresholds) {
-//         val split = ContinuousSplit(featureIndex, threshold)
-//         val result = MistakeCounter.countMistakes(validPoints, centers, split)
-//         val totalMistakes = result.leftMistakes + result.rightMistakes
+      newTree += (nodeId -> updatedParent)
+      newTree += (leftChildId -> leftChild)
+      newTree += (rightChildId -> rightChild)
+    }
 
-//         if (totalMistakes < minMistakes) {
-//             minMistakes = totalMistakes
-//             bestSplit = Some(split)
-//             bestResult = Some(result)
-//         }
-//         }
-//     }
-
-//     if (bestSplit.isEmpty || bestResult.isEmpty) {
-//         return node.markAsLeaf()
-//     }
-
-//     val result = bestResult.get
-//     println(s"\nBest split at Node ${node.id} (depth ${node.depth}): ${bestSplit.get}")
-//     println(s"  Left points: ${result.leftPoints.length}, Left centers: ${result.leftCenters.length}, Mistakes: ${result.leftMistakes}")
-//     println(s"  Right points: ${result.rightPoints.length}, Right centers: ${result.rightCenters.length}, Mistakes: ${result.rightMistakes}")
-
-//     val leftChild = buildNode(result.leftPoints, result.leftCenters, depth + 1, splits, result.leftMistakes)
-//     val rightChild = buildNode(result.rightPoints, result.rightCenters, depth + 1, splits, result.rightMistakes)
-
-//     node.withSplit(bestSplit.get, leftChild, rightChild, mistakes)
-// }
-
-//   private def nextNodeId(): Int = {
-//     val id = nodeIdCounter
-//     nodeIdCounter += 1
-//     id
-//   }
-// }
+    newTree
+  }
+}
