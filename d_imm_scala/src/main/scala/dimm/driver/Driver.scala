@@ -1,9 +1,9 @@
 package dimm.driver
 
-import dimm.binning.{FindSplits, BinAndAssign}
+// import dimm.binning.{FindSplits, BinAndAssign}
 import dimm.core._
-import dimm.tree.Node
-import dimm.core.IMMIteration
+import dimm.tree.{Node, TreePrinter}
+
 import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.linalg.{Vectors, Vector}
@@ -38,7 +38,7 @@ object IMMDriver {
     val featureDF = assembler.transform(typedDF).select("features")
 
     // === Step 2: Run KMeans ===
-    val k = 3  // Change if needed
+    val k = 4  // Change if needed
     val kmeans = new KMeans().setK(k).setSeed(42)
     val model = kmeans.fit(featureDF)
     val clustered = model.transform(featureDF).select("features", "prediction")
@@ -51,50 +51,17 @@ object IMMDriver {
 
     val clusterCenters: Array[Vector] = model.clusterCenters
 
-    // === Step 4: Compute Splits ===
-    val numFeatures = clusterCenters.head.size
-    val numExamples = clusteredInstances.count().toInt
-    val weightedNumExamples = clusteredInstances.map(_.weight).sum().toDouble
+    val startTime = System.nanoTime()
 
-    val splits = FindSplits.findSplits(
-      input = clusteredInstances,
-      clusterCenters = clusterCenters,
-      numFeatures = numFeatures,
-      numSplits = 10,
-      maxBins = 32,
-      numExamples = numExamples,
-      weightedNumExamples = weightedNumExamples,
-      seed = 42L
-    )
+    val (tree, splits) = IMMRunner.runIMM(clusteredInstances, clusterCenters)
+    val endTime = System.nanoTime()
+    val elapsedSeconds = (endTime - startTime).toDouble / 1e9
+    println(f"\n=== IMM Completed in $elapsedSeconds%.3f seconds ===")
+    TreePrinter.printTree(tree, splits)
+    
 
-    // === Step 5: Bin Instances and Centers ===
-    val binnedInstances = BinAndAssign.binInstancesRDD(clusteredInstances, splits).cache()
-    val binnedCenters = BinAndAssign.binClusterCentersRDD(clusterCenters, splits).cache()
-
-    // === Step 6: Initialize Tree ===
-    val allClusters = clusteredInstances.map(_.clusterId).distinct().collect().toSet
-    var tree = Map(0 -> Node(id = 0, depth = 0, clusterIds = allClusters))
-    var currentInstances = binnedInstances
-    var nodeCounter = 1
-    var done = false
-
-    // === Step 7: IMM Iteration Loop ===
-    while (!done) {
-      val (nextInstances, nextTree, nextCounter, converged) =
-        IMMIteration.runIteration(currentInstances, binnedCenters, tree, splits, nodeCounter)
-
-      currentInstances = nextInstances
-      tree = nextTree
-      nodeCounter = nextCounter
-      done = converged
-    }
-
-    // === Step 8: Print Final Tree ===
-    println("\n=== Final IMM Explanation Tree ===")
-    tree.toSeq.sortBy(_._1).foreach { case (id, node) =>
-      println(s"Node $id: $node")
-    }
-
+    
     spark.stop()
   }
 }
+
