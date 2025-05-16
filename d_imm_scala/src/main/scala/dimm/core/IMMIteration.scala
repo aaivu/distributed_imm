@@ -26,6 +26,13 @@ object IMMIteration {
     // Step 3: Pick best feature-split per node
     val bestSplitMap: Map[Int, BestSplitDecision] = BestSplitPerNodeSelector.selectBestPerNode(statsWithBestSplits)
 
+    // === Print best split details per node ===
+    println("=== Best Split Decisions Per Node ===")
+    bestSplitMap.foreach { case (nodeId, decision) =>
+      println(s"Node $nodeId: featureIndex=${decision.featureIndex}, threshold=${decision.split.threshold}, mistakes=${decision.mistakeCount}")
+    }
+    println("======================================")
+
     if (bestSplitMap.isEmpty) {
       println("No more splittable nodes.")
       return (instances, tree, nodeIdCounter, true)
