@@ -9,15 +9,14 @@ object BestSplitPerNodeSelector {
     statsMap
       .filter(_._2.bestSplit.isDefined)
       .groupBy { case ((nodeId, _), _) => nodeId }
-      .mapValues { entries =>
+      .map { case (nodeId, entries) =>
         val ((_, featureIndex), bestStat) = entries.minBy(_._2.bestSplitMistakes)
-        BestSplitDecision(
+        nodeId -> BestSplitDecision(
           nodeId = bestStat.nodeId,
           featureIndex = featureIndex,
           split = bestStat.bestSplit.get,
           mistakeCount = bestStat.bestSplitMistakes
         )
       }
-      .toMap
   }
 }

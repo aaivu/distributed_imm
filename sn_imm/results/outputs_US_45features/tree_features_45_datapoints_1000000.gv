@@ -1,0 +1,68 @@
+digraph ClusteringTree {
+n_0 [label="iLang1 <= -2.929
+samples=\1000000"];
+n_1 [label="2
+samples=\74700
+mistakes=\0"];
+n_2 [label="iOthrserv <= -0.039
+samples=\925300"];
+n_3 [label="iFeb55 <= -0.133
+samples=\923814"];
+n_4 [label="7
+samples=\1486
+mistakes=\0"];
+n_5 [label="iDisabl1 <= -1.698
+samples=\905209"];
+n_6 [label="0
+samples=\18605
+mistakes=\59"];
+n_7 [label="3
+samples=\158382
+mistakes=\1329"];
+n_8 [label="iAvail <= 1.313
+samples=\746827"];
+n_9 [label="iCitizen <= -0.259
+samples=\716031"];
+n_10 [label="8
+samples=\30796
+mistakes=\2682"];
+n_11 [label="dIncome7 <= -0.198
+samples=\643017"];
+n_12 [label="9
+samples=\73014
+mistakes=\2103"];
+n_13 [label="dHours <= -0.790
+samples=\585853"];
+n_14 [label="6
+samples=\57164
+mistakes=\6458"];
+n_15 [label="4
+samples=\200567
+mistakes=\18511"];
+n_16 [label="dAncstry1 <= 0.669
+samples=\385286"];
+n_17 [label="1
+samples=\310554
+mistakes=\8445"];
+n_18 [label="5
+samples=\74732
+mistakes=\578"];
+n_0 -> n_1;
+n_0 -> n_2;
+n_2 -> n_3;
+n_2 -> n_4;
+n_3 -> n_5;
+n_3 -> n_6;
+n_5 -> n_7;
+n_5 -> n_8;
+n_8 -> n_9;
+n_8 -> n_10;
+n_9 -> n_11;
+n_9 -> n_12;
+n_11 -> n_13;
+n_11 -> n_14;
+n_13 -> n_15;
+n_13 -> n_16;
+n_16 -> n_17;
+n_16 -> n_18;
+}

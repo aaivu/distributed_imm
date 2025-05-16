@@ -11,3 +11,4 @@ dist/
 Test/D_IMM_Test/*.png
 Test/D_IMM_Test/*.gv
 .metals/
+metastore_db/

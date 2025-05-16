@@ -1,0 +1,4 @@
+Features,Data Points,Runtime (seconds),Tree Filename
+45,100000,2.6705679893493652,outputs_US/tree_features_45_datapoints_100000.gv.png
+45,1000000,37.36707901954651,outputs_US/tree_features_45_datapoints_1000000.gv.png
+45,2000000,69.77918791770935,outputs_US/tree_features_45_datapoints_2000000.gv.png
