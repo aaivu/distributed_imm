@@ -1,0 +1,6 @@
+Features,Data Points,Runtime (seconds),Tree Filename
+27,1000000,21.504008054733276,tree_features_27_datapoints_1000000
+27,2000000,43.74978518486023,tree_features_27_datapoints_2000000
+27,3000000,87.53433299064636,tree_features_27_datapoints_3000000
+27,4000000,121.85428285598755,tree_features_27_datapoints_4000000
+27,5000000,177.03246808052063,tree_features_27_datapoints_5000000

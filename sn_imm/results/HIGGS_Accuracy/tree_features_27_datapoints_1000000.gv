@@ -1,0 +1,68 @@
+digraph ClusteringTree {
+n_0 [label="f21 <= 3.570
+samples=\1000000"];
+n_1 [label="f20 <= 0.080
+samples=\985458"];
+n_2 [label="8
+samples=\14542
+mistakes=\1335"];
+n_3 [label="f16 <= 0.038
+samples=\643444"];
+n_4 [label="f8 <= 0.182
+samples=\342014"];
+n_5 [label="f7 <= -0.296
+samples=\304290"];
+n_6 [label="f12 <= 0.039
+samples=\339154"];
+n_7 [label="f6 <= -0.146
+samples=\247355"];
+n_8 [label="9
+samples=\94659
+mistakes=\8596"];
+n_9 [label="5
+samples=\126163
+mistakes=\37615"];
+n_10 [label="f14 <= 0.142
+samples=\178127"];
+n_11 [label="f10 <= -0.023
+samples=\193539"];
+n_12 [label="3
+samples=\145615
+mistakes=\12908"];
+n_13 [label="1
+samples=\111776
+mistakes=\32089"];
+n_14 [label="2
+samples=\135579
+mistakes=\39508"];
+n_15 [label="4
+samples=\96865
+mistakes=\29067"];
+n_16 [label="6
+samples=\81262
+mistakes=\23963"];
+n_17 [label="0
+samples=\95360
+mistakes=\19343"];
+n_18 [label="7
+samples=\98179
+mistakes=\19591"];
+n_0 -> n_1;
+n_0 -> n_2;
+n_1 -> n_3;
+n_1 -> n_4;
+n_3 -> n_5;
+n_3 -> n_6;
+n_4 -> n_7;
+n_4 -> n_8;
+n_5 -> n_9;
+n_5 -> n_10;
+n_6 -> n_11;
+n_6 -> n_12;
+n_7 -> n_13;
+n_7 -> n_14;
+n_10 -> n_15;
+n_10 -> n_16;
+n_11 -> n_17;
+n_11 -> n_18;
+}

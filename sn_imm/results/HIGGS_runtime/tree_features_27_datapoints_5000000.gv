@@ -1,0 +1,68 @@
+digraph ClusteringTree {
+n_0 [label="1.353760004043579102e+00 <= 2.794
+samples=\5000000"];
+n_1 [label="9.780761599540710449e-01 <= 2.340
+samples=\4890589"];
+n_2 [label="6
+samples=\109411
+mistakes=\9506"];
+n_3 [label="7.542022466659545898e-01 <= 1.683
+samples=\4715907"];
+n_4 [label="7
+samples=\174682
+mistakes=\19397"];
+n_5 [label="0.000000000000000000e+00.1 <= -0.307
+samples=\4451733"];
+n_6 [label="5
+samples=\264174
+mistakes=\75061"];
+n_7 [label="0.000000000000000000e+00 <= -0.476
+samples=\2554446"];
+n_8 [label="-1.092063903808593750e+00 <= 0.214
+samples=\1897287"];
+n_9 [label="-2.485731393098831177e-01 <= 0.542
+samples=\907291"];
+n_10 [label="1.107436060905456543e+00 <= -0.935
+samples=\1647155"];
+n_11 [label="-1.045456994324922562e-02 <= 0.828
+samples=\1067544"];
+n_12 [label="9
+samples=\829743
+mistakes=\336502"];
+n_13 [label="3
+samples=\604450
+mistakes=\163940"];
+n_14 [label="1
+samples=\302841
+mistakes=\143455"];
+n_15 [label="0
+samples=\805331
+mistakes=\285187"];
+n_16 [label="8
+samples=\841824
+mistakes=\176901"];
+n_17 [label="2
+samples=\821526
+mistakes=\328084"];
+n_18 [label="4
+samples=\246018
+mistakes=\104178"];
+n_0 -> n_1;
+n_0 -> n_2;
+n_1 -> n_3;
+n_1 -> n_4;
+n_3 -> n_5;
+n_3 -> n_6;
+n_5 -> n_7;
+n_5 -> n_8;
+n_7 -> n_9;
+n_7 -> n_10;
+n_8 -> n_11;
+n_8 -> n_12;
+n_9 -> n_13;
+n_9 -> n_14;
+n_10 -> n_15;
+n_10 -> n_16;
+n_11 -> n_17;
+n_11 -> n_18;
+}
