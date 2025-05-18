@@ -29,3 +29,10 @@ assembly / assemblyMergeStrategy := {
     }
   case _ => MergeStrategy.first
 }
+
+Test / fork := true
+
+Test / javaOptions ++= Seq(
+  "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+  "--add-opens=java.base/java.nio=ALL-UNNAMED"
+)

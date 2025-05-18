@@ -4,26 +4,38 @@ import dimm.tree.ContinuousSplit
 
 object SplitEvaluator {
 
-  def evaluate(statsMap: Map[(Int, Int), NodeFeatureStats]): Map[(Int, Int), NodeFeatureStats] = {
-    statsMap.map { case (key, stats) =>
-      key -> findBestSplit(stats)
+  /**
+   * @param statsMap           Per-node, per-feature stats to evaluate splits on
+   * @param centerBinLookup    Map from (clusterId, featureIndex) → binIndex, based on actual binned centers
+   */
+  def evaluate(
+      statsMap: Map[(Int, Int), NodeFeatureStats],
+      centerBinLookup: Map[(Int, Int), Int]
+  ): Map[(Int, Int), NodeFeatureStats] = {
+    statsMap.map { case (key @ (nodeId, featureIndex), stats) =>
+      key -> findBestSplit(stats, featureIndex, centerBinLookup)
     }
   }
 
-  def findBestSplit(stats: NodeFeatureStats): NodeFeatureStats = {
+  def findBestSplit(
+      stats: NodeFeatureStats,
+      featureIndex: Int,
+      centerBinLookup: Map[(Int, Int), Int]
+  ): NodeFeatureStats = {
     if (!stats.isSplittable) return stats
 
     val minBin = stats.clusterMinBin
     val maxBin = stats.clusterMaxBin
 
     var bestStats = stats
-    for (splitBin <- (minBin + 1) to (maxBin - 1)) {
-      val split = ContinuousSplit(stats.featureIndex, threshold = splitBin.toDouble)
+    for (splitBin <- minBin to (maxBin - 1)) {
+      val split = ContinuousSplit(featureIndex, threshold = splitBin.toDouble)
 
       val mistakeCount = computeMistakes(
         splitBin,
         stats.clusterBinCounts,
-        centerBinLookup = estimateClusterCenterBins(stats)
+        featureIndex,
+        centerBinLookup
       )
 
       bestStats = bestStats.updateBestSplit(split, mistakeCount)
@@ -32,25 +44,17 @@ object SplitEvaluator {
     bestStats
   }
 
-  /** Helper to estimate cluster center bin from min+max (you can later cache this from clusterCenters) */
-  private def estimateClusterCenterBins(stats: NodeFeatureStats): Map[Int, Int] = {
-    stats.clusterBinCounts.map { case (clusterId, binMap) =>
-      val total = binMap.values.sum
-      val weightedAvgBin = binMap.map { case (bin, count) => bin * count }.sum / total
-      val approxBin = math.round(weightedAvgBin).toInt
-      clusterId -> approxBin
-    }
-  }
-
-  /** Count mistakes based on cluster center bin location vs. actual instance bin location */
+  /**
+   * Compute IMM mistakes by comparing instance bin vs. cluster center bin
+   */
   private def computeMistakes(
       splitBin: Int,
       clusterBinCounts: Map[Int, Map[Int, Double]],
-      centerBinLookup: Map[Int, Int]
+      featureIndex: Int,
+      centerBinLookup: Map[(Int, Int), Int]
   ): Long = {
-
     clusterBinCounts.map { case (clusterId, binCounts) =>
-      val centerBin = centerBinLookup(clusterId)
+      val centerBin = centerBinLookup((clusterId, featureIndex))
 
       binCounts.map { case (bin, count) =>
         val isLeft = bin <= splitBin

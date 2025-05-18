@@ -19,9 +19,17 @@ object IMMIteration {
 
     // Step 1: Compute node-feature stats
     val nodeFeatureStats = NodeStatsCollector.computeStats(instances, centers, splits)
+    val centerBinLookup: Map[(Int, Int), Int] = centers
+      .flatMap(center =>
+        center.binnedFeatures.zipWithIndex.map {
+          case (bin, featureIndex) => ((center.clusterId, featureIndex), bin)
+        }
+      )
+      .collect()
+      .toMap
 
     // Step 2: Evaluate best split per feature
-    val statsWithBestSplits = SplitEvaluator.evaluate(nodeFeatureStats)
+    val statsWithBestSplits = SplitEvaluator.evaluate(nodeFeatureStats,centerBinLookup)
 
     // Step 3: Pick best feature-split per node
     val bestSplitMap: Map[Int, BestSplitDecision] = BestSplitPerNodeSelector.selectBestPerNode(statsWithBestSplits)
