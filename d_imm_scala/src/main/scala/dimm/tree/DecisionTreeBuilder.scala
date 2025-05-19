@@ -9,7 +9,8 @@ object TreeBuilder {
   def updateTree(
       currentTree: Map[Int, Node],
       bestSplits: Map[Int, BestSplitDecision],
-      updatedInstances: RDD[BinnedInstance]
+      updatedInstances: RDD[BinnedInstance],
+      parentStats: Map[Int, (Int, Int)] // NEW
   ): Map[Int, Node] = {
 
     // Step 1: Group stats per nodeId: (samples, mistakes)
@@ -58,12 +59,12 @@ object TreeBuilder {
         isLeaf = rightClusters.size <= 1
       ).withSampleStats(rightStats._1, rightStats._2)
 
-      val parentStats = nodeStats.getOrElse(nodeId, (0, 0))
+      val thisParentStats = parentStats.getOrElse(nodeId, (0, 0))
 
       val updatedParent = parentNode
         .withSplit(decision.split)
         .withChildren(leftChild, rightChild)
-        .withSampleStats(parentStats._1, parentStats._2)
+        .withSampleStats(thisParentStats._1, thisParentStats._2)
 
       newTree += (nodeId -> updatedParent)
       newTree += (leftChildId -> leftChild)

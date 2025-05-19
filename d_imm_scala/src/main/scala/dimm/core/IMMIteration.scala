@@ -33,6 +33,13 @@ object IMMIteration {
 
     // Step 3: Pick best feature-split per node
     val bestSplitMap: Map[Int, BestSplitDecision] = BestSplitPerNodeSelector.selectBestPerNode(statsWithBestSplits)
+    // Step 3.5: Compute parent node stats before splitting
+    val parentNodeStats: Map[Int, (Int, Int)] = instances
+      .filter(inst => inst.isValid && bestSplitMap.contains(inst.nodeId))
+      .map(inst => (inst.nodeId, (1, 0)))
+      .reduceByKey((a, b) => (a._1 + b._1, 0)) // No mistake count needed here
+      .collect()
+      .toMap
 
     // === Print best split details per node ===
     println("=== Best Split Decisions Per Node ===")
@@ -52,7 +59,8 @@ object IMMIteration {
       InstanceSplitter.updateInstances(instances, bestSplitMap, centerMap, nodeIdCounter)
 
     // Step 5: Update tree structure
-    val updatedTree = TreeBuilder.updateTree(tree, bestSplitMap, updatedInstances)
+    val updatedTree = TreeBuilder.updateTree(tree, bestSplitMap, updatedInstances, parentNodeStats)
+
 
     (updatedInstances, updatedTree, nextNodeIdCounter, false)
   }

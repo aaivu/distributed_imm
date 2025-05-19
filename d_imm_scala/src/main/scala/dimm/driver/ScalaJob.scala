@@ -43,6 +43,10 @@ object IMMJob {
     // === Load Dataset ===
     val rawDF = spark.read.option("header", "true").csv(dataPath)
     val featureCols = rawDF.columns
+    // === Print column names and count ===
+    println("======================================================================")
+    println(s"Detected ${featureCols.length} columns: ${featureCols.mkString(", ")}")
+
     val typedDF = featureCols.foldLeft(rawDF)((df, col) => df.withColumn(col, df(col).cast("double")))
     val assembler = new VectorAssembler().setInputCols(featureCols).setOutputCol("features")
     val featureDF = assembler.transform(typedDF).select("features")
