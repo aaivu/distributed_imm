@@ -1,12 +1,14 @@
 package dimm.driver
 
 import dimm.core.{IMMRunner, Instance}
+import dimm.score.{KMeansCost,OriginalKMeansCost, SurrogateKMeansCost}
 import dimm.tree.TreePrinter
 import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.{SparkSession, Row}
 import org.apache.spark.rdd.RDD
+
 
 // import org.apache.log4j.{Level, Logger}
 // Logger.getLogger("org").setLevel(Level.ERROR)       // Suppress INFO/WARN from Spark internals
@@ -71,6 +73,17 @@ object IMMJob {
 
     // === Print Tree ===
     TreePrinter.printTree(tree, splits)
+
+    val originalKMeansCost = OriginalKMeansCost.compute(clustered, model.clusterCenters)(spark)
+    println(f"\n=== Original KMeans Cost (manually computed): $originalKMeansCost%.3f ===")
+
+
+    val treeAssigned = IMMRunner.assignToLeaves(clusteredInstances, tree)
+    val treeKMeansCost = KMeansCost.compute(treeAssigned)
+    println(f"\n=== True K-Means Cost from IMM Tree: $treeKMeansCost%.3f ===")
+
+    val surrogateCost = SurrogateKMeansCost.compute(treeAssigned, model.clusterCenters)
+    println(f"Surrogate KMeans Cost (IMM clusters + original centers): $surrogateCost%.3f")
 
     spark.stop()
   }

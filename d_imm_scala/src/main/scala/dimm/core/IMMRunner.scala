@@ -4,7 +4,7 @@ import dimm.binning.{FindSplits, BinAndAssign}
 import dimm.tree.{Node}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
-import dimm.tree.ContinuousSplit
+import dimm.tree.{ContinuousSplit,TreeRouter}
 
 object IMMRunner {
 
@@ -51,5 +51,12 @@ object IMMRunner {
     }
 
     (tree, splits)
+  }
+
+  def assignToLeaves(instances: RDD[Instance], tree: Map[Int, dimm.tree.Node]): RDD[(Int, Vector)] = {
+    instances.map { inst =>
+      val leafId = TreeRouter.findLeaf(inst.features, tree)
+      (leafId, inst.features)
+    }
   }
 }
