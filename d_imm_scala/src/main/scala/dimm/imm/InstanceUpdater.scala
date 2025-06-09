@@ -20,8 +20,8 @@ object InstanceSplitter {
     var nextNodeId = nodeIdCounterStart
 
     val newInstances = instances.map { instance =>
-      if (!instance.isValid || !broadcastSplits.value.contains(instance.nodeId)) {
-        // Leave invalid or non-split nodes unchanged
+      // If no split is available, keep current node ID and validity
+      if (!broadcastSplits.value.contains(instance.nodeId)) {
         instance
       } else {
         val splitDecision = broadcastSplits.value(instance.nodeId)
@@ -29,26 +29,23 @@ object InstanceSplitter {
         val bin = instance.binnedFeatures(split.featureIndex)
 
         val goLeft = bin <= split.threshold
-
-        // Assign new nodeId: left or right child (generate deterministically)
         val leftChildId = instance.nodeId * 2 + 1
         val rightChildId = instance.nodeId * 2 + 2
         val newNodeId = if (goLeft) leftChildId else rightChildId
 
-        // Determine where the cluster center lies
+        // Check center position to determine mistake
         val centerBin = broadcastCenters.value(instance.clusterId).binnedFeatures(split.featureIndex)
         val centerGoesLeft = centerBin <= split.threshold
-
         val isMistake = goLeft != centerGoesLeft
 
+        // Assign new node ID regardless of mistake
         instance.copy(
           nodeId = newNodeId,
-          isValid = !isMistake
+          isValid = instance.isValid && !isMistake // keep invalid if already invalid
         )
       }
     }
 
-    // Return updated instances and the next node ID counter (for building Nodes)
     val updatedMaxId = newInstances.map(_.nodeId).max()
     (newInstances, math.max(updatedMaxId + 1, nextNodeId))
   }

@@ -16,7 +16,7 @@ object BinAndAssign {
 
     for (i <- 0 until numFeatures) {
       val value = instance.features(i)
-      val featureSplits = splits(i).map(_.threshold).sorted
+      val featureSplits = splits(i).map(_.threshold)
       binnedFeatures(i) = findBin(value, featureSplits)
     }
 
@@ -39,7 +39,7 @@ object BinAndAssign {
 
     for (i <- 0 until numFeatures) {
       val value = vector(i)
-      val featureSplits = splits(i).map(_.threshold).sorted
+      val featureSplits = splits(i).map(_.threshold)
       binnedFeatures(i) = findBin(value, featureSplits)
     }
 

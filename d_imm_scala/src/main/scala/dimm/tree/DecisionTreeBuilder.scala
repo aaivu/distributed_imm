@@ -10,27 +10,23 @@ object TreeBuilder {
       currentTree: Map[Int, Node],
       bestSplits: Map[Int, BestSplitDecision],
       updatedInstances: RDD[BinnedInstance],
-      parentStats: Map[Int, (Int, Int)] // NEW
+      parentStats: Map[Int, (Int, Int)],
+      centerBinLookup: Map[(Int, Int), Int]
   ): Map[Int, Node] = {
 
-    // Step 1: Group stats per nodeId: (samples, mistakes)
+    // Step 1: Compute (nodeId → (sampleCount, mistakeCount)) for updated instances
     val nodeStats: Map[Int, (Int, Int)] = updatedInstances
       .map(inst => (inst.nodeId, (1, if (!inst.isValid) 1 else 0)))
-      .reduceByKey((a: (Int, Int), b: (Int, Int)) => (a._1 + b._1, a._2 + b._2))
+      .reduceByKey { case ((aCount, aMistakes), (bCount, bMistakes)) =>
+        (aCount + bCount, aMistakes + bMistakes)
+      }
       .collect()
       .toMap
 
-    // Step 2: Get clusterIds assigned to each node
-    val clusterAssignments = updatedInstances
-      .filter(_.isValid)
-      .map(inst => (inst.nodeId, inst.clusterId))
-      .distinct()
-      .groupByKey()
-      .mapValues(_.toSet)
-      .collect()
-      .toMap
+    // Step 2: Build lookup from clusterId → binnedFeatures (used for splitting clusters)
+    val clusterBinLookup = centerBinLookup
 
-    // Step 3: Build updated nodes
+    // Step 3: Update tree with split info
     var newTree = currentTree
 
     for ((nodeId, decision) <- bestSplits) {
@@ -39,12 +35,21 @@ object TreeBuilder {
       val leftChildId = nodeId * 2 + 1
       val rightChildId = nodeId * 2 + 2
 
-      val leftClusters = clusterAssignments.getOrElse(leftChildId, Set.empty)
-      val rightClusters = clusterAssignments.getOrElse(rightChildId, Set.empty)
+      val parentClusters = parentNode.clusterIds
+      val featureIndex = decision.split.featureIndex
+      val threshold = decision.split.threshold
 
+      // Partition parent clusters based on their binned feature value
+      val (leftClusters, rightClusters) = parentClusters.partition { clusterId =>
+        clusterBinLookup.getOrElse((clusterId, featureIndex), Int.MaxValue) <= threshold
+      }
+
+
+      // Stats per child node
       val leftStats = nodeStats.getOrElse(leftChildId, (0, 0))
       val rightStats = nodeStats.getOrElse(rightChildId, (0, 0))
 
+      // Build child nodes
       val leftChild = Node(
         id = leftChildId,
         depth = parentNode.depth + 1,
@@ -59,6 +64,7 @@ object TreeBuilder {
         isLeaf = rightClusters.size <= 1
       ).withSampleStats(rightStats._1, rightStats._2)
 
+      // Parent stats before split
       val thisParentStats = parentStats.getOrElse(nodeId, (0, 0))
 
       val updatedParent = parentNode
@@ -66,6 +72,7 @@ object TreeBuilder {
         .withChildren(leftChild, rightChild)
         .withSampleStats(thisParentStats._1, thisParentStats._2)
 
+      // Update tree
       newTree += (nodeId -> updatedParent)
       newTree += (leftChildId -> leftChild)
       newTree += (rightChildId -> rightChild)

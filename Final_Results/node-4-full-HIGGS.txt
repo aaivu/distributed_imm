@@ -1,0 +1,540 @@
+inuka_20@cluster-7a2d-m:~$ ./run_imm.sh
+Running IMM for dataset: gs://d-imm-test/HIGGS_1000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_1000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_1000000.csv using master='local[*]'
+25/05/19 08:44:49 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 08:44:49 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 08:44:50 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 08:44:50 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 08:44:50 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 08:44:50 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8032
+25/05/19 08:44:50 INFO AHSProxy: Connecting to Application History server at cluster-7a2d-m.local./10.128.15.212:10200
+25/05/19 08:44:51 INFO Configuration: resource-types.xml not found
+25/05/19 08:44:51 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/05/19 08:44:51 INFO YarnClientImpl: Submitted application application_1747633918367_0006
+25/05/19 08:44:53 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8030
+25/05/19 08:44:54 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 08:44:54 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/db6dc16a-d630-4403-82b3-e0794c224745/spark-job-history/application_1747633918367_0006.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 08:45:06 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=4.0, mistakes=26012
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=2.0, mistakes=8773
+Node 2: featureIndex=8, threshold=2.0, mistakes=14579
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=1.0, mistakes=6425
+Node 3: featureIndex=7, threshold=1.0, mistakes=59165
+Node 5: featureIndex=8, threshold=1.0, mistakes=9243
+======================================
+=== Best Split Decisions Per Node ===
+Node 9: featureIndex=10, threshold=12.0, mistakes=37137
+Node 8: featureIndex=14, threshold=17.0, mistakes=33025
+Node 11: featureIndex=6, threshold=3.0, mistakes=38112
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 26.502 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.080) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=1000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.038) | clusters=[0,5,6,7,3,4] | samples=643334 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f8 <= 0.403) | clusters=[9,2,1,8] | samples=330654 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f7 <= -0.015) | clusters=[4,5,6] | samples=303209 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.039) | clusters=[7,3,0] | samples=331352 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f8 <= 0.182) | clusters=[8,1,2] | samples=216421 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[9] | samples=114232 | mistakes=14578
+Node 7: Leaf | depth=3 | split=No split | clusters=[5] | samples=150029 | mistakes=52060
+Node 8: Node 8 | depth=3 | split=(f14 <= 0.229) | clusters=[4,6] | samples=146075 | mistakes=0
+Node 9: Node 9 | depth=3 | split=(f10 <= 0.007) | clusters=[7,0] | samples=191942 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[3] | samples=139409 | mistakes=6424
+Node 11: Node 11 | depth=3 | split=(f6 <= -0.166) | clusters=[2,1] | samples=207178 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 17: Leaf | depth=4 | split=No split | clusters=[4] | samples=82320 | mistakes=17470
+Node 18: Leaf | depth=4 | split=No split | clusters=[6] | samples=63755 | mistakes=15555
+Node 19: Leaf | depth=4 | split=No split | clusters=[0] | samples=96443 | mistakes=19488
+Node 20: Leaf | depth=4 | split=No split | clusters=[7] | samples=95499 | mistakes=17649
+Node 23: Leaf | depth=4 | split=No split | clusters=[1] | samples=91901 | mistakes=17549
+Node 24: Leaf | depth=4 | split=No split | clusters=[2] | samples=115277 | mistakes=20563
+
+=== Original KMeans Cost (manually computed): 13923576.006 ===
+
+=== True K-Means Cost from IMM Tree: 17177161.406 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 19519927.265
+Completed IMM for 1000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_2000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_2000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_2000000.csv using master='local[*]'
+25/05/19 08:46:24 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 08:46:24 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 08:46:24 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 08:46:24 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 08:46:25 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 08:46:25 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8032
+25/05/19 08:46:25 INFO AHSProxy: Connecting to Application History server at cluster-7a2d-m.local./10.128.15.212:10200
+25/05/19 08:46:26 INFO Configuration: resource-types.xml not found
+25/05/19 08:46:26 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/05/19 08:46:26 INFO YarnClientImpl: Submitted application application_1747633918367_0007
+25/05/19 08:46:27 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8030
+25/05/19 08:46:29 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 08:46:29 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/db6dc16a-d630-4403-82b3-e0794c224745/spark-job-history/application_1747633918367_0007.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 08:46:40 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=4.0, mistakes=16995
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=3.0, mistakes=18191
+Node 2: featureIndex=16, threshold=4.0, mistakes=10534
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=8, threshold=3.0, mistakes=11283
+Node 3: featureIndex=14, threshold=18.0, mistakes=135429
+Node 5: featureIndex=8, threshold=5.0, mistakes=58435
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=7, threshold=2.0, mistakes=25377
+Node 9: featureIndex=6, threshold=7.0, mistakes=73103
+Node 11: featureIndex=14, threshold=1.0, mistakes=60194
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 48.655 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.043) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=2000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.035) | clusters=[0,1,9,2,3,4] | samples=1297352 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f16 <= 0.102) | clusters=[5,6,8,7] | samples=685653 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.517) | clusters=[9,2,3] | samples=607441 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f8 <= 0.033) | clusters=[0,4,1] | samples=671720 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f8 <= 0.639) | clusters=[7,6,5] | samples=517681 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[8] | samples=167868 | mistakes=10430
+Node 7: Node 7 | depth=3 | split=(f7 <= -0.004) | clusters=[2,9] | samples=325385 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[3] | samples=207160 | mistakes=60533
+Node 9: Node 9 | depth=3 | split=(f6 <= 0.002) | clusters=[4,0] | samples=382967 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[1] | samples=288742 | mistakes=11272
+Node 11: Node 11 | depth=3 | split=(f14 <= -0.533) | clusters=[5,6] | samples=285488 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[7] | samples=230960 | mistakes=57202
+Node 15: Leaf | depth=4 | split=No split | clusters=[2] | samples=160883 | mistakes=11971
+Node 16: Leaf | depth=4 | split=No split | clusters=[9] | samples=164502 | mistakes=13406
+Node 19: Leaf | depth=4 | split=No split | clusters=[4] | samples=192220 | mistakes=37247
+Node 20: Leaf | depth=4 | split=No split | clusters=[0] | samples=190747 | mistakes=35856
+Node 23: Leaf | depth=4 | split=No split | clusters=[6] | samples=95738 | mistakes=28396
+Node 24: Leaf | depth=4 | split=No split | clusters=[5] | samples=189750 | mistakes=31798
+
+=== Original KMeans Cost (manually computed): 27764704.873 ===
+
+=== True K-Means Cost from IMM Tree: 39083080.750 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 47886730.009
+Completed IMM for 2000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_3000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_3000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_3000000.csv using master='local[*]'
+25/05/19 08:48:48 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 08:48:48 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 08:48:48 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 08:48:48 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 08:48:48 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 08:48:49 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8032
+25/05/19 08:48:49 INFO AHSProxy: Connecting to Application History server at cluster-7a2d-m.local./10.128.15.212:10200
+25/05/19 08:48:49 INFO Configuration: resource-types.xml not found
+25/05/19 08:48:49 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/05/19 08:48:50 INFO YarnClientImpl: Submitted application application_1747633918367_0008
+25/05/19 08:48:51 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8030
+25/05/19 08:48:52 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 08:48:53 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/db6dc16a-d630-4403-82b3-e0794c224745/spark-job-history/application_1747633918367_0008.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 08:49:05 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=16, threshold=3.0, mistakes=58350
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=20, threshold=7.0, mistakes=40819
+Node 2: featureIndex=20, threshold=1.0, mistakes=21731
+======================================
+=== Best Split Decisions Per Node ===
+Node 3: featureIndex=16, threshold=2.0, mistakes=55530
+Node 5: featureIndex=12, threshold=1.0, mistakes=17516
+Node 6: featureIndex=26, threshold=18.0, mistakes=9489
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=14, threshold=18.0, mistakes=204331
+Node 11: featureIndex=10, threshold=16.0, mistakes=111778
+======================================
+=== Best Split Decisions Per Node ===
+Node 15: featureIndex=7, threshold=1.0, mistakes=32320
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 77.799 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f16 <= 0.315) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=3000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f20 <= 1.932) | clusters=[1,9,7,3,4] | samples=1687020 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f20 <= 0.025) | clusters=[0,5,6,2,8] | samples=1254630 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f16 <= 0.038) | clusters=[9,7,1,4] | samples=1001043 | mistakes=0
+Node 4: Leaf | depth=2 | split=No split | clusters=[3] | samples=647017 | mistakes=1859
+Node 5: Node 5 | depth=2 | split=(f12 <= 0.036) | clusters=[5,0,8] | samples=981631 | mistakes=0
+Node 6: Node 6 | depth=2 | split=(f26 <= 1.956) | clusters=[6,2] | samples=251268 | mistakes=0
+Node 7: Node 7 | depth=3 | split=(f14 <= 0.240) | clusters=[9,7,4] | samples=945513 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 11: Node 11 | depth=3 | split=(f10 <= 0.007) | clusters=[8,5] | samples=569209 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[0] | samples=412375 | mistakes=17469
+Node 13: Leaf | depth=3 | split=No split | clusters=[6] | samples=243354 | mistakes=7739
+Node 14: Leaf | depth=3 | split=No split | clusters=[2] | samples=7914 | mistakes=1750
+Node 15: Node 15 | depth=4 | split=(f7 <= -0.004) | clusters=[7,4] | samples=469141 | mistakes=0
+Node 16: Leaf | depth=4 | split=No split | clusters=[9] | samples=398879 | mistakes=126838
+Node 23: Leaf | depth=4 | split=No split | clusters=[5] | samples=285729 | mistakes=57966
+Node 24: Leaf | depth=4 | split=No split | clusters=[8] | samples=283480 | mistakes=53812
+Node 31: Leaf | depth=5 | split=No split | clusters=[7] | samples=235473 | mistakes=16426
+Node 32: Leaf | depth=5 | split=No split | clusters=[4] | samples=233668 | mistakes=15894
+
+=== Original KMeans Cost (manually computed): 42350534.158 ===
+25/05/19 08:51:50 WARN TaskSetManager: Lost task 0.0 in stage 147.0 (TID 1385) (cluster-7a2d-w-3.c.d-imm-experiments.internal executor 1): java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+25/05/19 08:51:50 ERROR TaskSetManager: Task 2 in stage 147.0 failed 4 times; aborting job
+25/05/19 08:51:50 WARN TaskSetManager: Lost task 6.3 in stage 147.0 (TID 1403) (cluster-7a2d-w-1.c.d-imm-experiments.internal executor 4): TaskKilled (Stage cancelled: Job aborted due to stage failure: Task 2 in stage 147.0 failed 4 times, most recent failure: Lost task 2.3 in stage 147.0 (TID 1402) (cluster-7a2d-w-0.c.d-imm-experiments.internal executor 3): java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+Driver stacktrace:)
+Exception in thread "main" org.apache.spark.SparkException: Job aborted due to stage failure: Task 2 in stage 147.0 failed 4 times, most recent failure: Lost task 2.3 in stage 147.0 (TID 1402) (cluster-7a2d-w-0.c.d-imm-experiments.internal executor 3): java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+Driver stacktrace:
+        at org.apache.spark.scheduler.DAGScheduler.failJobAndIndependentStages(DAGScheduler.scala:2856)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2(DAGScheduler.scala:2792)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2$adapted(DAGScheduler.scala:2791)
+        at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)
+        at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)
+        at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)
+        at org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:2791)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1(DAGScheduler.scala:1247)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1$adapted(DAGScheduler.scala:1247)
+        at scala.Option.foreach(Option.scala:407)
+        at org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:1247)
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:3060)
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2994)
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2983)
+        at org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:49)
+        at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:989)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2452)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2547)
+        at org.apache.spark.rdd.RDD.$anonfun$fold$1(RDD.scala:1202)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:410)
+        at org.apache.spark.rdd.RDD.fold(RDD.scala:1196)
+        at org.apache.spark.rdd.DoubleRDDFunctions.$anonfun$sum$1(DoubleRDDFunctions.scala:36)
+        at scala.runtime.java8.JFunction0$mcD$sp.apply(JFunction0$mcD$sp.java:23)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:410)
+        at org.apache.spark.rdd.DoubleRDDFunctions.sum(DoubleRDDFunctions.scala:36)
+        at dimm.score.KMeansCost$.compute(KMeansCost.scala:11)
+        at dimm.driver.IMMJob$.main(ScalaJob.scala:82)
+        at dimm.driver.IMMJob.main(ScalaJob.scala)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at org.apache.spark.deploy.JavaMainApplication.start(SparkApplication.scala:52)
+        at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:1032)
+        at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:194)
+        at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:217)
+        at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:91)
+        at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:1124)
+        at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1133)
+        at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+Caused by: java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+25/05/19 08:51:50 WARN TaskSetManager: Lost task 0.3 in stage 147.0 (TID 1405) (cluster-7a2d-w-3.c.d-imm-experiments.internal executor 1): TaskKilled (Stage cancelled: Job aborted due to stage failure: Task 2 in stage 147.0 failed 4 times, most recent failure: Lost task 2.3 in stage 147.0 (TID 1402) (cluster-7a2d-w-0.c.d-imm-experiments.internal executor 3): java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+Driver stacktrace:)
+25/05/19 08:51:50 WARN TaskSetManager: Lost task 4.1 in stage 147.0 (TID 1406) (cluster-7a2d-w-0.c.d-imm-experiments.internal executor 3): TaskKilled (Stage cancelled: Job aborted due to stage failure: Task 2 in stage 147.0 failed 4 times, most recent failure: Lost task 2.3 in stage 147.0 (TID 1402) (cluster-7a2d-w-0.c.d-imm-experiments.internal executor 3): java.util.NoSuchElementException: next on empty iterator
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:41)
+        at scala.collection.Iterator$$anon$2.next(Iterator.scala:39)
+        at scala.collection.IterableLike.head(IterableLike.scala:109)
+        at scala.collection.IterableLike.head$(IterableLike.scala:108)
+        at scala.collection.AbstractIterable.head(Iterable.scala:56)
+        at dimm.tree.TreeRouter$.findLeaf(TreeRouter.scala:28)
+        at dimm.core.IMMRunner$.$anonfun$assignToLeaves$1(IMMRunner.scala:58)
+        at scala.collection.Iterator$$anon$10.next(Iterator.scala:461)
+        at org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write(BypassMergeSortShuffleWriter.java:171)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:104)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)
+        at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+        at org.apache.spark.scheduler.Task.run(Task.scala:141)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+        at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:96)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+Driver stacktrace:)
+Completed IMM for 3000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_4000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_4000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_4000000.csv using master='local[*]'
+25/05/19 08:51:57 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 08:51:57 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 08:51:57 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 08:51:57 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 08:51:58 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 08:51:58 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8032
+25/05/19 08:51:58 INFO AHSProxy: Connecting to Application History server at cluster-7a2d-m.local./10.128.15.212:10200
+25/05/19 08:51:59 INFO Configuration: resource-types.xml not found
+25/05/19 08:51:59 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/05/19 08:51:59 INFO YarnClientImpl: Submitted application application_1747633918367_0009
+25/05/19 08:52:00 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8030
+25/05/19 08:52:01 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 08:52:02 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/db6dc16a-d630-4403-82b3-e0794c224745/spark-job-history/application_1747633918367_0009.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 08:52:13 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=5.0, mistakes=78068
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=1.0, mistakes=56319
+Node 2: featureIndex=12, threshold=6.0, mistakes=44272
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=4.0, mistakes=92228
+Node 3: featureIndex=14, threshold=15.0, mistakes=244519
+Node 5: featureIndex=12, threshold=3.0, mistakes=29059
+======================================
+=== Best Split Decisions Per Node ===
+Node 9: featureIndex=7, threshold=18.0, mistakes=140149
+Node 11: featureIndex=10, threshold=14.0, mistakes=167434
+======================================
+=== Best Split Decisions Per Node ===
+Node 19: featureIndex=10, threshold=1.0, mistakes=78397
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 100.819 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.083) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=4000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.012) | clusters=[0,5,1,9,8,4] | samples=2573227 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f12 <= 0.893) | clusters=[2,6,7,3] | samples=1348705 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.075) | clusters=[0,9] | samples=1167605 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.429) | clusters=[5,8,4,1] | samples=1349303 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f12 <= 0.042) | clusters=[3,2,7] | samples=916002 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[6] | samples=432703 | mistakes=44272
+Node 7: Leaf | depth=3 | split=No split | clusters=[9] | samples=607437 | mistakes=129102
+Node 8: Leaf | depth=3 | split=No split | clusters=[0] | samples=560168 | mistakes=115417
+Node 9: Node 9 | depth=3 | split=(f7 <= 0.026) | clusters=[8,5,1] | samples=774255 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[4] | samples=574751 | mistakes=91931
+Node 11: Node 11 | depth=3 | split=(f10 <= 0.007) | clusters=[3,7] | samples=886943 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 19: Node 19 | depth=4 | split=(f10 <= -0.794) | clusters=[1,5] | samples=375632 | mistakes=0
+Node 20: Leaf | depth=4 | split=No split | clusters=[8] | samples=380348 | mistakes=121874
+Node 23: Leaf | depth=4 | split=No split | clusters=[7] | samples=444499 | mistakes=83686
+Node 24: Leaf | depth=4 | split=No split | clusters=[3] | samples=442444 | mistakes=83748
+Node 39: Leaf | depth=5 | split=No split | clusters=[1] | samples=100840 | mistakes=24065
+Node 40: Leaf | depth=5 | split=No split | clusters=[5] | samples=274792 | mistakes=54332
+
+=== Original KMeans Cost (manually computed): 55924810.950 ===
+
+=== True K-Means Cost from IMM Tree: 70570096.467 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 82674667.302
+Completed IMM for 4000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_5000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_5000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_5000000.csv using master='local[*]'
+25/05/19 08:56:00 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 08:56:00 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 08:56:00 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 08:56:00 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 08:56:00 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 08:56:00 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8032
+25/05/19 08:56:01 INFO AHSProxy: Connecting to Application History server at cluster-7a2d-m.local./10.128.15.212:10200
+25/05/19 08:56:01 INFO Configuration: resource-types.xml not found
+25/05/19 08:56:01 INFO ResourceUtils: Unable to find 'resource-types.xml'.
+25/05/19 08:56:01 INFO YarnClientImpl: Submitted application application_1747633918367_0010
+25/05/19 08:56:02 INFO DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at cluster-7a2d-m.local./10.128.15.212:8030
+25/05/19 08:56:04 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 08:56:04 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/db6dc16a-d630-4403-82b3-e0794c224745/spark-job-history/application_1747633918367_0010.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 08:56:15 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=9.0, mistakes=108354
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=3.0, mistakes=42906
+Node 2: featureIndex=6, threshold=10.0, mistakes=348479
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=1.0, mistakes=88218
+Node 3: featureIndex=14, threshold=18.0, mistakes=300479
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=7, threshold=18.0, mistakes=120257
+Node 10: featureIndex=6, threshold=14.0, mistakes=118086
+Node 9: featureIndex=10, threshold=5.0, mistakes=137905
+======================================
+=== Best Split Decisions Per Node ===
+Node 15: featureIndex=18, threshold=14.0, mistakes=86440
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 116.266 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 2.326) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=5000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.067) | clusters=[0,5,1,9,2,7,3,8] | samples=3427943 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f6 <= 0.003) | clusters=[4,6] | samples=1463703 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.582) | clusters=[9,0,8,7] | samples=1639646 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.000) | clusters=[5,1,3,2] | samples=1745391 | mistakes=0
+Node 5: Leaf | depth=2 | split=No split | clusters=[4] | samples=734177 | mistakes=177994
+Node 6: Leaf | depth=2 | split=No split | clusters=[6] | samples=729526 | mistakes=170485
+Node 7: Node 7 | depth=3 | split=(f7 <= 0.187) | clusters=[0,8,9] | samples=982536 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[7] | samples=529316 | mistakes=172685
+Node 9: Node 9 | depth=3 | split=(f10 <= -0.023) | clusters=[1,2] | samples=930126 | mistakes=0
+Node 10: Node 10 | depth=3 | split=(f6 <= 0.007) | clusters=[5,3] | samples=727047 | mistakes=0
+Node 15: Node 15 | depth=4 | split=(f18 <= 0.007) | clusters=[8,9] | samples=510825 | mistakes=0
+Node 16: Leaf | depth=4 | split=No split | clusters=[0] | samples=418330 | mistakes=66876
+Node 19: Leaf | depth=4 | split=No split | clusters=[1] | samples=466265 | mistakes=68341
+Node 20: Leaf | depth=4 | split=No split | clusters=[2] | samples=463861 | mistakes=69564
+Node 21: Leaf | depth=4 | split=No split | clusters=[5] | samples=364618 | mistakes=53755
+Node 22: Leaf | depth=4 | split=No split | clusters=[3] | samples=362429 | mistakes=64331
+Node 31: Leaf | depth=5 | split=No split | clusters=[8] | samples=281026 | mistakes=42684
+Node 32: Leaf | depth=5 | split=No split | clusters=[9] | samples=229799 | mistakes=43756
+
+=== Original KMeans Cost (manually computed): 70819717.951 ===
+
+=== True K-Means Cost from IMM Tree: 97734027.889 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 121516536.282
+Completed IMM for 5000000 rows

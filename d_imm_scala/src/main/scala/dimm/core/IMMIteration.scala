@@ -59,7 +59,7 @@ object IMMIteration {
       InstanceSplitter.updateInstances(instances, bestSplitMap, centerMap, nodeIdCounter)
 
     // Step 5: Update tree structure
-    val updatedTree = TreeBuilder.updateTree(tree, bestSplitMap, updatedInstances, parentNodeStats)
+    val updatedTree = TreeBuilder.updateTree(tree, bestSplitMap, updatedInstances, parentNodeStats, centerBinLookup)
 
 
     (updatedInstances, updatedTree, nextNodeIdCounter, false)

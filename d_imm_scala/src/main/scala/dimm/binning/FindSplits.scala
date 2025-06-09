@@ -10,13 +10,14 @@ object FindSplits {
 
   def findSplits(
       input: RDD[Instance],
-      clusterCenters: Array[Vector],                        // ADDED
+      clusterCenters: Array[Vector],
       numFeatures: Int,
       numSplits: Int,
       maxBins: Int,
       numExamples: Int,
       weightedNumExamples: Double,
-      seed: Long): Array[Array[ContinuousSplit]] = {
+      seed: Long
+  ): Array[Array[ContinuousSplit]] = {
 
     val continuousFeatures = 0 until numFeatures
 
@@ -61,10 +62,10 @@ object FindSplits {
       featureValueWeights.get(featureIndex) match {
         case Some((valueMap: scala.collection.Map[Double, Double], count: Long)) =>
           val dataSplits = findThresholdsForFeature(valueMap.toMap, count, numSplits, maxBins, weightedNumExamples)
-          val allSplits = dedup((dataSplits ++ centerSplits).toArray)
+          val allSplits = dedup((dataSplits ++ centerSplits).toArray, centerSplits.toSet)
           allSplits.map(t => ContinuousSplit(featureIndex, t))
         case _ =>
-          val allSplits = dedup(centerSplits.toArray)
+          val allSplits = dedup(centerSplits.toArray, centerSplits.toSet)
           allSplits.map(t => ContinuousSplit(featureIndex, t))
       }
     }
@@ -77,7 +78,8 @@ object FindSplits {
       count: Long,
       numSplits: Int,
       maxBins: Int,
-      weightedNumExamples: Double): Array[Double] = {
+      weightedNumExamples: Double
+  ): Array[Double] = {
 
     val requiredSamples = math.max(maxBins * maxBins, 10000)
     val tolerance = 1e-6 * count * 100
@@ -126,9 +128,14 @@ object FindSplits {
     }
   }
 
-  private def dedup(thresholds: Array[Double], tol: Double = 1e-9): Array[Double] = {
+  private def dedup(
+      thresholds: Array[Double],
+      centerValues: Set[Double],
+      tol: Double = 1e-9
+  ): Array[Double] = {
     thresholds.sorted.foldLeft(Vector.empty[Double]) { (acc, v) =>
-      if (acc.isEmpty || math.abs(acc.last - v) > tol) acc :+ v else acc
+      val tooClose = acc.exists(prev => math.abs(prev - v) <= tol)
+      if (!tooClose || centerValues.contains(v)) acc :+ v else acc
     }.toArray
   }
 }

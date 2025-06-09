@@ -1,0 +1,374 @@
+inuka_20@node-2-scalaexplain-m:~$ ./run_imm.sh 
+Running IMM for dataset: gs://d-imm-test/HIGGS_1000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_1000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_1000000.csv using master='local[*]'
+25/05/19 14:40:53 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 14:40:54 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 14:40:54 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 14:40:54 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 14:40:54 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 14:40:56 INFO DataprocSparkPlugin: Registered 188 executor metrics
+25/05/19 14:40:57 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 14:40:57 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/e5145342-1021-40db-a146-2cbc92902cbf/spark-job-history/local-1747665654516.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 14:41:03 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=4.0, mistakes=26012
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=2.0, mistakes=8773
+Node 2: featureIndex=8, threshold=2.0, mistakes=14579
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=1.0, mistakes=6425
+Node 3: featureIndex=7, threshold=1.0, mistakes=59165
+Node 5: featureIndex=8, threshold=1.0, mistakes=9243
+======================================
+=== Best Split Decisions Per Node ===
+Node 9: featureIndex=10, threshold=12.0, mistakes=37137
+Node 8: featureIndex=14, threshold=17.0, mistakes=33025
+Node 11: featureIndex=6, threshold=3.0, mistakes=38112
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 38.842 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.080) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=1000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.038) | clusters=[0,5,6,7,3,4] | samples=643334 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f8 <= 0.403) | clusters=[1,8,9,2] | samples=330654 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f7 <= -0.015) | clusters=[6,4,5] | samples=303209 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.039) | clusters=[0,7,3] | samples=331352 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f8 <= 0.182) | clusters=[8,1,2] | samples=216421 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[9] | samples=114232 | mistakes=14578
+Node 7: Leaf | depth=3 | split=No split | clusters=[5] | samples=150029 | mistakes=52060
+Node 8: Node 8 | depth=3 | split=(f14 <= 0.229) | clusters=[4,6] | samples=146075 | mistakes=0
+Node 9: Node 9 | depth=3 | split=(f10 <= 0.007) | clusters=[7,0] | samples=191942 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[3] | samples=139409 | mistakes=6424
+Node 11: Node 11 | depth=3 | split=(f6 <= -0.166) | clusters=[2,1] | samples=207178 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 17: Leaf | depth=4 | split=No split | clusters=[4] | samples=82320 | mistakes=17470
+Node 18: Leaf | depth=4 | split=No split | clusters=[6] | samples=63755 | mistakes=15555
+Node 19: Leaf | depth=4 | split=No split | clusters=[0] | samples=96443 | mistakes=19488
+Node 20: Leaf | depth=4 | split=No split | clusters=[7] | samples=95499 | mistakes=17649
+Node 23: Leaf | depth=4 | split=No split | clusters=[1] | samples=91901 | mistakes=17549
+Node 24: Leaf | depth=4 | split=No split | clusters=[2] | samples=115277 | mistakes=20563
+
+=== Original KMeans Cost (manually computed): 13923576.006 ===
+
+=== True K-Means Cost from IMM Tree: 17177161.406 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 19519927.265
+
+=== KMeans Cluster Centers ===
+Center 0: [0.9983030467876788, -0.4968051327716679, 0.006846801445582918, 0.9959963733127077, 0.003863170935360961, 0.98305925818526, -0.4400699093897067, -0.0046782974769544695, 1.3803516998145913, 0.8955015988400482, -0.8021890983130399, 0.004287956223941547, 0.03894608786582625, 1.0866240985358282, -0.23579683579072847, -0.00705862848944408, 2.3376453349928834, 0.9184879387631517, -0.6006460740014127, 7.017726091487924E-4, 0.07862065903136815, 0.9560492832488969, 0.9894767738337394, 1.050279555806927, 1.013107398210897, 0.9814475954608161, 1.0148535847844682]
+Center 1: [0.9877506673336028, -0.5846605703839256, 0.0015945955595610285, 1.0084048538083266, 0.006687337600475247, 0.9532489601819611, -0.8638199724696042, -0.01501352123379651, 0.18246141580711409, 0.9825049121255016, -0.646743887472063, 0.0162683857714985, 0.8249323979595723, 0.9908612378327685, -0.6545091394763695, -0.007388189919641548, 0.7254420959861889, 1.1533183372069016, -0.20938080721201768, 0.004848850880859281, 2.962338042215414, 1.0425923571198341, 1.0007196239083977, 1.0492252089955025, 0.9317343830116077, 0.7736616626381523, 0.9401591689958508]
+Center 2: [0.9918236858938803, 0.4658379070191917, 0.0022790478821797305, 1.0153055562946884, -0.009262502695538632, 0.9613241565591994, 0.7461494634968383, 0.006126299025316027, 0.019105256244678105, 1.0102874435607887, 0.4894644088442158, 7.78508973269681E-4, 1.0082197635854322, 0.9993720452511853, 0.51207788515471, -0.003441980145728745, 0.7347743894860123, 1.1672032717105423, 0.16889516952093284, -0.006353658397424721, 2.9368438130234584, 1.054233843148188, 1.0058974158633942, 1.0490061365290115, 0.9334705085888743, 0.7705590057740402, 0.9427888238236095]
+Center 3: [0.9839409315594689, 0.010293858785389999, 0.001836097856977907, 0.9945248831676916, 4.262759395196963E-4, 0.9432633358860643, 0.007691867397877724, -0.012866617507915326, 0.0, 1.067532203876167, 0.0045878280427378414, 0.012058401260228323, 2.058522724752881, 1.0807324826506417, 0.00629048360147991, 0.005943525332828551, 2.3658350213961388, 0.8777732152739243, 0.008994877886343155, -6.718843986162644E-4, 0.0, 1.020459807806626, 1.0440546361231513, 1.0508796470523543, 1.001384725773719, 0.964873483129803, 1.0251667149869894]
+Center 4: [0.9927889709005211, -0.4895219913091182, -0.19180201384953988, 0.9910229638647531, -0.19246100555441314, 0.9979804630263697, -0.40432253720603, 0.7645623166855812, 1.469507738659036, 1.0221296711653425, -0.3580573038047871, -0.4662699510238223, 1.5446453579492239, 0.909922920413149, -0.6891978638576768, -0.0840302650396908, 0.037879776095307204, 0.9265879861938797, -0.5636191206885303, -0.08131158297270559, 0.07041807069031915, 0.9065598239790651, 0.9719250978900368, 1.0506584151567042, 1.039292897440229, 1.0895508243374654, 1.0451774179169644]
+Center 5: [0.9831044634747059, -0.19712466911574242, 0.2276760388625921, 0.988748110265409, 0.24043138388269766, 1.035010317929948, -0.16606329969928635, -0.9181588715805532, 1.5198232422219407, 1.0589348285825422, -0.13450376999886932, 0.5651383932958605, 1.5777778495929244, 0.9198336551279205, -0.277861943504769, 0.1081935875562287, 0.023601023383507995, 0.9312343007011804, -0.2545517213666948, 0.09301805907922994, 0.049246761717250356, 0.9166021262165874, 0.9817925121400433, 1.0512050095777563, 1.0605245746300782, 1.1720885271701138, 1.0789622631069553]
+Center 6: [0.9923204475835483, 0.6100451641995857, -0.07274502180810365, 0.9875214417401186, -0.07187830098117465, 0.9828479568536481, 0.5007529752701754, 0.28266354916927194, 1.497849360892447, 1.01380985659968, 0.4412510267324301, -0.18167645796061282, 1.5669410070628695, 0.9010311851987379, 0.8739382247716885, -0.03302075129277324, 0.028630953302503162, 0.9138374985013847, 0.743458053022538, -0.029112059659923046, 0.024698988626049044, 0.8941538016530338, 0.9666017012459303, 1.0514468015514804, 1.0336332066785314, 1.081516726491251, 1.035672367026952]
+Center 7: [0.9933063214494935, 0.48592758733426106, -0.00700491306040771, 0.9997118119638907, -0.005436251264386905, 0.985996452544852, 0.427472216588529, -0.004418078694765358, 1.3927925563104477, 0.899736443951023, 0.7854096052792118, -0.003566482454337903, 0.03177049370009084, 1.0902528541182905, 0.22852066379284253, 0.006707638019343134, 2.3271658167755236, 0.9218172495438576, 0.5844823995268381, -9.021999669749807E-4, 0.08012602110298998, 0.959263737987782, 0.9930482843882764, 1.05045751759655, 1.0185069807819744, 0.9867433504296992, 1.0190000998039608]
+Center 8: [1.1115792524371635, 0.007200059020558834, -3.4313359578100696E-4, 1.1740560307573755, -0.002762741537281691, 1.6491512140500006, -0.005033436840608429, -1.716314846949186E-4, 0.40340924665969813, 1.620156704927627, 0.006961722565088458, -0.0044239913475020345, 0.9299627743165562, 1.4315779747052864, 0.014057002462884587, -0.004172971578691491, 1.4157506244900968, 1.2502520028324662, -0.011161025697003998, -0.0010467835286670695, 1.8443495563179846, 4.7700114704801395, 2.913906858750056, 1.0640997986807443, 1.2308983190211664, 1.1131132055343194, 2.182186944044111]
+Center 9: [0.9848850159790408, 0.11008567136440438, 5.351772345995079E-4, 0.9736726065086068, 0.0013642825020367926, 0.9849097689900257, 0.08104791191066821, -0.004422649550795682, 2.026266831753732, 0.859198414505936, 0.14764854703680047, 0.0018350139900467084, 0.0, 0.8557642879473888, 0.14699291067683504, 0.004233356480538841, 0.0, 1.0394745376607402, 0.04176287561391022, -0.0048848409513786864, 2.877593669564235, 0.9923316961836782, 0.9778509654493902, 1.0494548138020356, 1.0320604663928883, 0.9270088816473606, 1.0316268312012338]
+Completed IMM for 1000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_2000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_2000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_2000000.csv using master='local[*]'
+25/05/19 14:42:39 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 14:42:39 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 14:42:39 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 14:42:39 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 14:42:40 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 14:42:43 INFO DataprocSparkPlugin: Registered 188 executor metrics
+25/05/19 14:42:43 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 14:42:43 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/e5145342-1021-40db-a146-2cbc92902cbf/spark-job-history/local-1747665760140.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 14:42:49 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=4.0, mistakes=16995
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=3.0, mistakes=18191
+Node 2: featureIndex=16, threshold=4.0, mistakes=10534
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=8, threshold=3.0, mistakes=11283
+Node 3: featureIndex=14, threshold=18.0, mistakes=135429
+Node 5: featureIndex=8, threshold=5.0, mistakes=58435
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=7, threshold=2.0, mistakes=25377
+Node 9: featureIndex=6, threshold=7.0, mistakes=73103
+Node 11: featureIndex=14, threshold=1.0, mistakes=60194
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 78.797 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.043) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=2000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.035) | clusters=[0,1,9,2,3,4] | samples=1297352 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f16 <= 0.102) | clusters=[5,6,8,7] | samples=685653 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.517) | clusters=[9,2,3] | samples=607441 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f8 <= 0.033) | clusters=[0,4,1] | samples=671720 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f8 <= 0.639) | clusters=[7,6,5] | samples=517681 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[8] | samples=167868 | mistakes=10430
+Node 7: Node 7 | depth=3 | split=(f7 <= -0.004) | clusters=[2,9] | samples=325385 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[3] | samples=207160 | mistakes=60533
+Node 9: Node 9 | depth=3 | split=(f6 <= 0.002) | clusters=[4,0] | samples=382967 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[1] | samples=288742 | mistakes=11272
+Node 11: Node 11 | depth=3 | split=(f14 <= -0.533) | clusters=[5,6] | samples=285488 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[7] | samples=230960 | mistakes=57202
+Node 15: Leaf | depth=4 | split=No split | clusters=[2] | samples=160883 | mistakes=11971
+Node 16: Leaf | depth=4 | split=No split | clusters=[9] | samples=164502 | mistakes=13406
+Node 19: Leaf | depth=4 | split=No split | clusters=[4] | samples=192220 | mistakes=37247
+Node 20: Leaf | depth=4 | split=No split | clusters=[0] | samples=190747 | mistakes=35856
+Node 23: Leaf | depth=4 | split=No split | clusters=[6] | samples=95738 | mistakes=28396
+Node 24: Leaf | depth=4 | split=No split | clusters=[5] | samples=189750 | mistakes=31798
+
+=== Original KMeans Cost (manually computed): 27764704.873 ===
+
+=== True K-Means Cost from IMM Tree: 39083080.750 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 47886730.009
+
+=== KMeans Cluster Centers ===
+Center 0: [0.9903071776032746, 0.4876956259230283, 0.0031132185034607285, 1.007262249708182, -0.006285152568545877, 0.9830634206406164, 0.8077879182306104, 0.0019996964951627364, 0.029932268009084547, 1.0630242136756218, 0.39771651343237074, 9.609385326290284E-4, 1.489398961541829, 1.1293379027882025, 0.2400839163816986, -7.811393815357918E-4, 2.3165936841918477, 0.9335899516674875, 0.6219312340873246, 2.732055925416612E-4, 0.017038131949859335, 1.0613399538473052, 1.0540542139246225, 1.0508547497822993, 0.9798245018454106, 0.9031443203296373, 1.0127716876270838]
+Center 1: [0.9931814942739677, 0.009409453638606109, -0.0019223803332980183, 0.9848154947869353, -2.0253908015967684E-4, 0.9711114390191893, 0.005773838633052637, -0.002405115652581158, 2.001711406135793, 0.8576315645902594, 0.012338740912906637, 6.532304291267652E-4, 0.0, 1.0323364806205084, 0.003029932486854096, 0.0038741815204721623, 2.365887709981415, 0.8562211218096907, 0.005440864963698267, 0.0023267898480636, 0.0, 0.9775940594233945, 1.015692026386393, 1.0499666185099163, 1.068473442452764, 1.1028373705941803, 1.0782434262151406]
+Center 2: [0.9896649389110334, -0.3745218516327625, 0.23973540714945044, 0.9888929951663601, 0.2384184666832616, 1.0173145940838353, -0.29267784897406496, -0.8705830169955451, 1.5324555283192158, 1.0366898524925663, -0.28644830324887216, 0.48678489491456844, 1.5310663700991596, 0.9166950046297138, -0.5326747080098386, 0.11071437013992193, 0.0341082330288218, 0.928401212202628, -0.4581610311574867, 0.08880004453900565, 0.042602987365485206, 0.9219444119019659, 0.9831165736116724, 1.051229661347857, 1.0527261023038166, 1.1362712075514183, 1.066781382809732]
+Center 3: [0.9923084696483102, 0.6105884869708909, 0.014165036874901492, 0.9851284504481475, 0.006393107206454364, 0.9852274857480036, 0.4824553960746773, -0.027934489359523796, 1.5654542896356132, 1.009342836326855, 0.47107801704225644, 0.013557316135817442, 1.5231162237970364, 0.900256309405703, 0.8832896954697742, 0.005205608028311957, 0.02760776746306767, 0.9115753809891705, 0.751617257170489, -0.002018403078774828, 0.0025357340184268876, 0.8963931928000693, 0.9695845432936414, 1.0515321779761169, 1.036757866396728, 1.0948802780531144, 1.0411108148874326]
+Center 4: [0.991575555046837, -0.4809781636684869, -6.117345410124286E-4, 1.0104793418218732, 0.0038484953522443053, 0.982754470423634, -0.817064658553546, -0.0036956204993431885, 0.03277732266037716, 1.0615455822366822, -0.39457638774708664, 0.0073154015982424955, 1.4714069843087718, 1.1308209335815098, -0.23621168003732926, 0.0023686835736186607, 2.3328915926145433, 0.9359239699844636, -0.6111491213270082, -0.001955172846816954, 0.02656244474331219, 1.0650860797790354, 1.055027680512112, 1.0510493925960458, 0.9796975083747316, 0.9048900701929344, 1.0149436110178276]
+Center 5: [0.9897576379154565, 0.3479497955455624, 0.0015035405399122818, 1.0159069053191538, -0.0023093811914963614, 1.0036237585822043, 0.5237538170396453, 0.004760838841110219, 5.8188901192161605E-5, 1.1045190187710823, 0.28346453680138206, -2.5949052380730295E-4, 1.637513890535754, 0.9427712648144883, 0.5167620501484605, -0.003612657669258154, 0.003043250817573184, 1.1678503543450052, 0.13076297666977424, -0.0016742268877705136, 2.8548025355213356, 1.1707297933548961, 1.065307839026995, 1.050144547070936, 0.9575842366894728, 0.7987767628002547, 1.0011971906693695]
+Center 6: [0.9838026175252931, -0.7102157753056008, -0.007271229236662538, 0.9944047044479313, 9.881805007437615E-4, 0.9682482793712129, -0.8375908189082337, 0.005049049598558757, 0.6391880890246199, 0.9760400310800333, -0.7792252679555335, -0.0016437127484083948, 0.771335975982872, 0.9181826290685204, -0.9835158266759568, -0.006285055534726722, 0.10158265604345716, 1.1298803799096744, -0.24795125180141941, 2.0527682769506093E-4, 2.896376454528365, 1.0478298678597209, 1.0046652497076158, 1.0490563464972833, 0.9473695875666742, 0.8000483638115737, 0.9611752451380172]
+Center 7: [0.9865043020514733, 0.2770751175851372, 0.0027516631000303227, 0.9767257200926235, 6.575391439445876E-4, 0.9924311644242139, 0.18246394745582203, 4.770173814428724E-4, 1.9867552487374718, 0.8709117243593242, 0.37720438063526723, 0.003666305416661688, 0.0, 0.867114555721956, 0.38945548591732015, -0.0015218314592149562, 0.0, 1.045881485021398, 0.09505186544675849, -0.001099879086101748, 2.865069805322083, 1.04248626908481, 1.0019261925151914, 1.0496067106367835, 1.0377228976710804, 0.9295619206335509, 1.0468358561176565]
+Center 8: [1.007555527556424, 0.06617556247170941, 0.001455002519810559, 1.0426389351382412, -0.004761060372462795, 0.9817713769258472, 0.09261908125464655, 4.7997620545195765E-4, 3.241873593283282E-4, 0.9318375911579999, 0.09475892991690676, 0.0016056759867083801, 1.1951456943318324E-4, 1.1722739002352858, 0.04433785348562439, -4.6641401328513743E-4, 2.3623699082853844, 1.163654435064734, 0.0244716058483352, -0.0021086802104587805, 2.8802000044821323, 1.3643929325517135, 1.1513983588321866, 1.049945857104937, 0.9283134099562891, 0.7575150396394772, 1.0005964445639024]
+Center 9: [0.9857521987066875, -0.3471524639714897, -0.25066174117854756, 0.9901596899730066, -0.24260286033941172, 1.020858941323919, -0.268761851614078, 0.8893733597256629, 1.5348829681938922, 1.038192198320358, -0.2711779435656795, -0.5026585910401192, 1.5282653165776847, 0.9178483902818213, -0.48759471846759217, -0.11617236335861586, 0.0347102891411348, 0.9281401420200107, -0.4160089006952938, -0.08776311651618109, 0.04023263939610947, 0.9222853382854352, 0.9824192871524763, 1.0501609815712856, 1.0536709729213731, 1.1392570455021545, 1.0686660446749694]
+Completed IMM for 2000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_3000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_3000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_3000000.csv using master='local[*]'
+25/05/19 14:45:49 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 14:45:49 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 14:45:49 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 14:45:49 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 14:45:50 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 14:45:52 INFO DataprocSparkPlugin: Registered 188 executor metrics
+25/05/19 14:45:52 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 14:45:53 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/e5145342-1021-40db-a146-2cbc92902cbf/spark-job-history/local-1747665950164.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 14:45:59 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=16, threshold=3.0, mistakes=58350
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=20, threshold=7.0, mistakes=40819
+Node 2: featureIndex=20, threshold=1.0, mistakes=21731
+======================================
+=== Best Split Decisions Per Node ===
+Node 3: featureIndex=16, threshold=2.0, mistakes=55530
+Node 5: featureIndex=12, threshold=1.0, mistakes=17516
+Node 6: featureIndex=26, threshold=18.0, mistakes=9489
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=14, threshold=18.0, mistakes=204331
+Node 11: featureIndex=10, threshold=16.0, mistakes=111778
+======================================
+=== Best Split Decisions Per Node ===
+Node 15: featureIndex=7, threshold=1.0, mistakes=32320
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 127.366 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f16 <= 0.315) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=3000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f20 <= 1.932) | clusters=[1,9,7,3,4] | samples=1687020 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f20 <= 0.025) | clusters=[0,5,6,2,8] | samples=1254630 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f16 <= 0.038) | clusters=[9,7,1,4] | samples=1001043 | mistakes=0
+Node 4: Leaf | depth=2 | split=No split | clusters=[3] | samples=647017 | mistakes=1859
+Node 5: Node 5 | depth=2 | split=(f12 <= 0.036) | clusters=[0,5,8] | samples=981631 | mistakes=0
+Node 6: Node 6 | depth=2 | split=(f26 <= 1.956) | clusters=[2,6] | samples=251268 | mistakes=0
+Node 7: Node 7 | depth=3 | split=(f14 <= 0.240) | clusters=[9,7,4] | samples=945513 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 11: Node 11 | depth=3 | split=(f10 <= 0.007) | clusters=[8,5] | samples=569209 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[0] | samples=412375 | mistakes=17469
+Node 13: Leaf | depth=3 | split=No split | clusters=[6] | samples=243354 | mistakes=7739
+Node 14: Leaf | depth=3 | split=No split | clusters=[2] | samples=7914 | mistakes=1750
+Node 15: Node 15 | depth=4 | split=(f7 <= -0.004) | clusters=[7,4] | samples=469141 | mistakes=0
+Node 16: Leaf | depth=4 | split=No split | clusters=[9] | samples=398879 | mistakes=126838
+Node 23: Leaf | depth=4 | split=No split | clusters=[5] | samples=285729 | mistakes=57966
+Node 24: Leaf | depth=4 | split=No split | clusters=[8] | samples=283480 | mistakes=53812
+Node 31: Leaf | depth=5 | split=No split | clusters=[7] | samples=235473 | mistakes=16426
+Node 32: Leaf | depth=5 | split=No split | clusters=[4] | samples=233668 | mistakes=15894
+
+=== Original KMeans Cost (manually computed): 42350534.158 ===
+
+Driver stacktrace:)
+Completed IMM for 3000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_4000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_4000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_4000000.csv using master='local[*]'
+25/05/19 14:50:22 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 14:50:22 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 14:50:22 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 14:50:22 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 14:50:22 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 14:50:25 INFO DataprocSparkPlugin: Registered 188 executor metrics
+25/05/19 14:50:25 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 14:50:25 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/e5145342-1021-40db-a146-2cbc92902cbf/spark-job-history/local-1747666222648.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 14:50:31 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=5.0, mistakes=78068
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=1.0, mistakes=56319
+Node 2: featureIndex=12, threshold=6.0, mistakes=44272
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=4.0, mistakes=92228
+Node 3: featureIndex=14, threshold=15.0, mistakes=244519
+Node 5: featureIndex=12, threshold=3.0, mistakes=29059
+======================================
+=== Best Split Decisions Per Node ===
+Node 9: featureIndex=7, threshold=18.0, mistakes=140149
+Node 11: featureIndex=10, threshold=14.0, mistakes=167434
+======================================
+=== Best Split Decisions Per Node ===
+Node 19: featureIndex=10, threshold=1.0, mistakes=78397
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 166.039 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 0.083) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=4000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.012) | clusters=[0,5,1,9,8,4] | samples=2573227 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f12 <= 0.893) | clusters=[7,3,2,6] | samples=1348705 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.075) | clusters=[9,0] | samples=1167605 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.429) | clusters=[5,1,4,8] | samples=1349303 | mistakes=0
+Node 5: Node 5 | depth=2 | split=(f12 <= 0.042) | clusters=[7,3,2] | samples=916002 | mistakes=0
+Node 6: Leaf | depth=2 | split=No split | clusters=[6] | samples=432703 | mistakes=44272
+Node 7: Leaf | depth=3 | split=No split | clusters=[9] | samples=607437 | mistakes=129102
+Node 8: Leaf | depth=3 | split=No split | clusters=[0] | samples=560168 | mistakes=115417
+Node 9: Node 9 | depth=3 | split=(f7 <= 0.026) | clusters=[8,1,5] | samples=774255 | mistakes=0
+Node 10: Leaf | depth=3 | split=No split | clusters=[4] | samples=574751 | mistakes=91931
+Node 11: Node 11 | depth=3 | split=(f10 <= 0.007) | clusters=[3,7] | samples=886943 | mistakes=0
+Node 12: Leaf | depth=3 | split=No split | clusters=[] | samples=0 | mistakes=0
+Node 19: Node 19 | depth=4 | split=(f10 <= -0.794) | clusters=[5,1] | samples=375632 | mistakes=0
+Node 20: Leaf | depth=4 | split=No split | clusters=[8] | samples=380348 | mistakes=121874
+Node 23: Leaf | depth=4 | split=No split | clusters=[7] | samples=444499 | mistakes=83686
+Node 24: Leaf | depth=4 | split=No split | clusters=[3] | samples=442444 | mistakes=83748
+Node 39: Leaf | depth=5 | split=No split | clusters=[1] | samples=100840 | mistakes=24065
+Node 40: Leaf | depth=5 | split=No split | clusters=[5] | samples=274792 | mistakes=54332
+
+=== Original KMeans Cost (manually computed): 55924810.950 ===
+
+=== True K-Means Cost from IMM Tree: 70570096.467 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 82674667.302
+
+=== KMeans Cluster Centers ===
+Center 0: [0.9898437753187603, 0.4758850985504905, 3.535094929719507E-4, 0.9878767538763307, -0.00284942711210389, 0.9988482258094031, 0.3950305888310121, 0.008689076280800356, 1.5256207581504364, 1.0331757001894601, 0.30704369851832847, -0.00528190622172982, 1.6618528240232404, 0.8993347755043443, 0.7800795542072065, -0.004192731649363861, 0.0033360604161728554, 0.9133812480964251, 0.5749429649062912, -0.0038637570060618413, 0.015750693557719308, 0.9001849634635251, 0.9736275570212823, 1.0512361747122594, 1.0495703243214396, 1.1411240118081833, 1.059067122683544]
+Center 1: [0.9875749084986182, -0.738184920538939, 0.032896978563674927, 0.990725913079323, 0.04435552331444368, 0.9577747909409962, -0.7719354307825652, -0.11360715349254909, 0.9444135556713481, 0.92894395988205, -0.9378323178144529, 0.04058636279530119, 0.42936874702053823, 1.088884378098602, -0.33685110802116114, 0.02438034235175395, 2.306792016754463, 0.9217974571061074, -0.8933674521043588, 0.016841902963221647, 0.08332110724290599, 0.9562662155017152, 0.991175548839131, 1.050769053983027, 0.9822527171077333, 0.929365791238344, 0.9853515014257672]
+Center 2: [1.1179382429225184, -0.0014811875900234517, 0.002347736816427011, 1.1656848720477895, -0.001161679400220235, 1.6592640337338955, -0.013383966670979791, -0.003829192212877153, 0.42100642516361964, 1.623347877266774, -0.007591729554344676, -0.0013776953619160082, 0.8930319052452828, 1.4343600717844156, 8.306930654206397E-4, 0.004558961268238443, 1.4250526275283224, 1.2528237338793893, -0.00976697597281964, 0.002840176622472025, 1.8624332511432693, 4.790891792325807, 2.9231135108410022, 1.064281751713489, 1.229805099296155, 1.1096666183587078, 2.186766906124435]
+Center 3: [0.9908550814006567, 0.5193121596556461, -5.357669403530728E-4, 1.002383879024165, -2.4886310031089196E-4, 0.9752420126631146, 0.5434268800394371, 0.002585828750179482, 0.9717891668060833, 0.8990516881880586, 0.8033499812720855, 8.447646490961637E-4, 0.04168709766702376, 0.9816937726956768, 0.560942771918503, -0.002513493044308193, 0.7313558412751836, 1.1296031722011743, 0.18153394813169374, -0.0017153606395156544, 2.9124768536461096, 1.0208025699151926, 0.9880649673735811, 1.0490157151032058, 0.9609970048764627, 0.8152454591769422, 0.9622157124022842]
+Center 4: [0.985246904049125, 0.14554557492856476, -0.00480393639713242, 0.9967429317681208, -0.011028437692050056, 0.9488259349479646, 0.19907652971536832, 0.026414747316025437, 0.0, 1.0744934915264777, 0.10002656647389764, -0.0068294104450972995, 2.0642188893045836, 1.0838201129617322, 0.0752007107432322, -0.003757793675770111, 2.3377226146497123, 0.8814401374585822, 0.18507472868710037, -0.003077996746349211, 6.410600508975028E-5, 1.024400401344133, 1.0467787557497041, 1.0509988113588007, 1.0056816923465695, 0.9706732385069614, 1.030734602656627]
+Center 5: [0.9965754081468154, 0.365562301401394, 0.3314990274850486, 0.9974180875542233, 0.2904005308260734, 1.000392571454655, 0.3232403107770473, -0.8767383509487462, 1.4685678882590032, 0.9015260022233061, 0.582376450079289, 0.276533576515654, 0.024800193277011724, 1.0817601683037124, 0.13517477501768133, 0.2060697867038793, 2.151099268352121, 0.9271987509031421, 0.4384800486838432, 0.13955965500955633, 0.0696751919362271, 0.9601390334593729, 0.9899687491570777, 1.0491211158306752, 1.023461453651067, 0.9870646907981523, 1.0243258654349368]
+Center 6: [0.9788344480181301, 0.0021676262109916336, -0.0028903886627464504, 0.9988910798944137, -0.002226765622206669, 0.9487395399443854, 0.0010200745918107854, 0.004356298829017172, 0.0, 1.0893223487145685, 0.0012730655972738843, -0.002062915973914426, 2.074496918085987, 0.8851657906546901, 8.950976985085237E-4, -0.003688050039841346, 0.0, 1.101480870553948, 0.001573565020682586, 0.004984605649436089, 2.871733810665899, 1.056768682951343, 1.0128612156031964, 1.049478437209971, 0.9689055640451257, 0.8304391337750713, 0.9855936984640283]
+Center 7: [0.9909710467827385, -0.5140590823447512, -2.2549469126848906E-4, 1.0006773519260892, 0.0032855186249900374, 0.977658659403898, -0.5369861120246471, -6.398320082124056E-4, 1.0176850508240558, 0.9003916058335131, -0.7942064831223822, 2.326509206839986E-4, 0.04144170260862049, 0.9750582000844484, -0.5561177430054716, -0.0010912015296148342, 0.6785576833750214, 1.1275141269160742, -0.1819937900377742, -8.227854076394972E-4, 2.9110320073489753, 1.0181531058631494, 0.9876451148931364, 1.0493004591876938, 0.9628818164615427, 0.819549036287807, 0.9644025784265384]
+Center 8: [0.9961484224865321, 0.2564382310860051, -0.34346377148838614, 1.0010607338300506, -0.31186055850417865, 1.0045905195085394, 0.2289996748049143, 0.9115229029027961, 1.5265663171254393, 0.8989210828441467, 0.3931006053026954, -0.2905967575558921, 0.010721474749923538, 1.0814004147322032, 0.08983542208288647, -0.21072519452309063, 2.1692921701523318, 0.9246197010989217, 0.3075618030016787, -0.1445934609482776, 0.06625306234354919, 0.9636348356943999, 0.9928184352430488, 1.0491811495585475, 1.0312000204041394, 0.9991920396182622, 1.031937815725476]
+Center 9: [0.9894245329843444, -0.4766364830313744, 2.1652245197479198E-4, 0.9889962341887726, 4.394471034388845E-4, 1.0004434291900783, -0.3935148244306889, -0.0025179572230817774, 1.5346717941804888, 1.030018576738586, -0.34593719965224295, 0.0016908149716649444, 1.611188268836002, 0.9036570096796758, -0.7353080914545134, 5.081628101222797E-4, 0.011795403582628896, 0.9171214961222323, -0.5759004752539355, 7.16955580282475E-4, 0.013604351129158403, 0.9020004940052799, 0.9723239582885471, 1.0514220683632745, 1.0482727038081958, 1.1296697121886448, 1.0562570637348927]
+Completed IMM for 4000000 rows
+---------------------------------------------
+Running IMM for dataset: gs://d-imm-test/HIGGS_5000000.csv
+Received args: --k, 10, --data, gs://d-imm-test/HIGGS_5000000.csv
+Running IMM with k=10 on gs://d-imm-test/HIGGS_5000000.csv using master='local[*]'
+25/05/19 14:56:26 INFO SparkEnv: Registering MapOutputTracker
+25/05/19 14:56:26 INFO SparkEnv: Registering BlockManagerMaster
+25/05/19 14:56:26 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/05/19 14:56:26 INFO SparkEnv: Registering OutputCommitCoordinator
+25/05/19 14:56:26 INFO DataprocSparkPlugin: Registered 188 driver metrics
+25/05/19 14:56:29 INFO DataprocSparkPlugin: Registered 188 executor metrics
+25/05/19 14:56:30 INFO GoogleCloudStorageImpl: Ignoring exception of type GoogleJsonResponseException; verified object already exists with desired state.
+25/05/19 14:56:30 INFO GoogleHadoopOutputStream: hflush(): No-op due to rate limit (RateLimiter[stableRate=0.2qps]): readers will *not* yet see flushed data for gs://dataproc-temp-us-central1-265752977305-cj47uzoj/e5145342-1021-40db-a146-2cbc92902cbf/spark-job-history/local-1747666586904.inprogress [CONTEXT ratelimit_period="1 MINUTES" ]
+======================================================================
+Detected 27 columns: f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26
+25/05/19 14:56:36 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+=== Best Split Decisions Per Node ===
+Node 0: featureIndex=20, threshold=9.0, mistakes=108354
+======================================
+=== Best Split Decisions Per Node ===
+Node 1: featureIndex=16, threshold=3.0, mistakes=42906
+Node 2: featureIndex=6, threshold=10.0, mistakes=348479
+======================================
+=== Best Split Decisions Per Node ===
+Node 4: featureIndex=12, threshold=1.0, mistakes=88218
+Node 3: featureIndex=14, threshold=18.0, mistakes=300479
+======================================
+=== Best Split Decisions Per Node ===
+Node 7: featureIndex=7, threshold=18.0, mistakes=120257
+Node 10: featureIndex=6, threshold=14.0, mistakes=118086
+Node 9: featureIndex=10, threshold=5.0, mistakes=137905
+======================================
+=== Best Split Decisions Per Node ===
+Node 15: featureIndex=18, threshold=14.0, mistakes=86440
+======================================
+=== Best Split Decisions Per Node ===
+======================================
+No more splittable nodes.
+
+=== IMM Completed in 189.611 seconds ===
+
+=== Final IMM Explanation Tree ===
+Node 0: Node 0 | depth=0 | split=(f20 <= 2.326) | clusters=[0,5,1,6,9,2,7,3,8,4] | samples=5000000 | mistakes=0
+Node 1: Node 1 | depth=1 | split=(f16 <= 0.067) | clusters=[0,5,1,9,2,7,3,8] | samples=3427943 | mistakes=0
+Node 2: Node 2 | depth=1 | split=(f6 <= 0.003) | clusters=[4,6] | samples=1463703 | mistakes=0
+Node 3: Node 3 | depth=2 | split=(f14 <= 0.582) | clusters=[0,8,9,7] | samples=1639646 | mistakes=0
+Node 4: Node 4 | depth=2 | split=(f12 <= 0.000) | clusters=[1,3,5,2] | samples=1745391 | mistakes=0
+Node 5: Leaf | depth=2 | split=No split | clusters=[4] | samples=734177 | mistakes=177994
+Node 6: Leaf | depth=2 | split=No split | clusters=[6] | samples=729526 | mistakes=170485
+Node 7: Node 7 | depth=3 | split=(f7 <= 0.187) | clusters=[0,8,9] | samples=982536 | mistakes=0
+Node 8: Leaf | depth=3 | split=No split | clusters=[7] | samples=529316 | mistakes=172685
+Node 9: Node 9 | depth=3 | split=(f10 <= -0.023) | clusters=[1,2] | samples=930126 | mistakes=0
+Node 10: Node 10 | depth=3 | split=(f6 <= 0.007) | clusters=[5,3] | samples=727047 | mistakes=0
+Node 15: Node 15 | depth=4 | split=(f18 <= 0.007) | clusters=[9,8] | samples=510825 | mistakes=0
+Node 16: Leaf | depth=4 | split=No split | clusters=[0] | samples=418330 | mistakes=66876
+Node 19: Leaf | depth=4 | split=No split | clusters=[1] | samples=466265 | mistakes=68341
+Node 20: Leaf | depth=4 | split=No split | clusters=[2] | samples=463861 | mistakes=69564
+Node 21: Leaf | depth=4 | split=No split | clusters=[5] | samples=364618 | mistakes=53755
+Node 22: Leaf | depth=4 | split=No split | clusters=[3] | samples=362429 | mistakes=64331
+Node 31: Leaf | depth=5 | split=No split | clusters=[8] | samples=281026 | mistakes=42684
+Node 32: Leaf | depth=5 | split=No split | clusters=[9] | samples=229799 | mistakes=43756
+
+=== Original KMeans Cost (manually computed): 70819717.951 ===
+
+=== True K-Means Cost from IMM Tree: 97734027.889 ===
+Surrogate KMeans Cost (IMM clusters + original centers): 121516536.282
+
+=== KMeans Cluster Centers ===
+Center 0: [0.9797334069664572, -0.3787039537481373, -0.21495040664535467, 0.9838635922448334, -0.2147140980698083, 1.0223026778485804, -0.29248646672107764, 0.8942208475621993, 1.5566651405831788, 1.039088159255694, -0.275675058264778, -0.5939088729163631, 1.5034203863495081, 0.9117175805333991, -0.551717527767231, -0.08512970542125586, 0.01805802614198214, 0.9336629619348829, -0.486514173059861, -0.08011508495239769, 0.1252813361643593, 0.9140723850025316, 0.977032214721314, 1.0503638426883286, 1.0504055212275871, 1.145639910095327, 1.0657268579650698]
+Center 1: [0.9946518495913701, -0.4733836115038807, 0.004864183170197613, 0.9934233367313449, 0.01459974473400024, 0.9779239249016899, -0.35206248396352535, -0.0046086401204769685, 1.4883913358463887, 0.8787583985185254, -0.9049321197739543, -0.0061406355040694695, 4.134498522821827E-4, 1.0751650509681532, -0.2301000410323293, -0.003070132716121062, 2.356260367346329, 0.9129768002115047, -0.5343976135428152, -0.0012378233374406374, 0.08571816837638954, 0.9784987163562375, 1.002585320235228, 1.0502888334328928, 1.0212701093247412, 0.9965596794231162, 1.026965543001355]
+Center 2: [0.9940564580622001, 0.454797084600487, -0.004199853672794743, 0.9937012118773868, -0.012790671408899862, 0.9830073185731285, 0.2820080949721295, 0.011422867455498092, 1.6298793652625976, 0.8764414538936811, 0.8905568291503764, -1.4306939715428863E-4, 1.544070768242584E-4, 1.067219907935895, 0.21683360324080975, -0.003100760346156214, 2.321504012723448, 0.8997081382282013, 0.5219713119362545, 6.687627657494752E-4, 0.06001087456382115, 0.9810285971561957, 1.0076010812180194, 1.0505203374277272, 1.0379290129273657, 1.031097760520484, 1.0457033136357772]
+Center 3: [0.9900888292679357, 0.4627404667765982, -0.0068422577949170124, 1.0017167985174331, -0.0016379098445990893, 0.9774612647584937, 0.9486017931898587, 0.003982233589958703, 4.417804893543064E-4, 1.0838749779156363, 0.2409501710526609, -0.0015727975816065545, 1.7173020870403157, 1.1196510658056593, 0.24547612908985886, 0.016168382027737897, 2.341021018926013, 0.9230155383770551, 0.5902255231329097, -0.0025597217829281126, 0.04495797479571713, 1.0933826235410362, 1.0762855744923348, 1.0512340907454467, 0.9902971866294339, 0.92871613601701, 1.033758754815846]
+Center 4: [0.9923831857322661, -0.5201728635720145, -0.0020141752544121337, 1.0066059057998495, -9.921616770767819E-4, 0.9855609420293203, -0.6272938075309658, -1.1279489413195237E-4, 0.6580855451312964, 0.9707984585937419, -0.6271721692507469, 5.207713018452874E-4, 0.614822651063444, 0.9694747256565668, -0.5953119478259904, -3.1249653300469555E-4, 0.555275393171155, 1.1280986179805375, -0.18054822854741429, 0.003126093336319013, 3.0038876085491175, 1.1451387512241846, 1.0506237819173332, 1.049858980223133, 0.965968988462128, 0.8187692137059122, 0.9984659043939559]
+Center 5: [0.9896950049369423, -0.4197663542835252, -0.012077105310745245, 1.0064907963292737, -0.021989004819828118, 0.9764671439668661, -0.8716617863982635, 0.024106072656456052, 1.7882588603192597E-4, 1.0941064855699674, -0.20417225864039, -0.001661057640778749, 1.8780294462941696, 1.108124287030528, -0.20946648018179392, 0.0012773459125804882, 2.3285554318315485, 0.9060376297390541, -0.5901077304610072, 0.0037068948869056996, 0.018725807077322333, 1.1072407230957597, 1.088640712175039, 1.0511088019462682, 1.001250229725044, 0.9528004207866879, 1.0504246221541031]
+Center 6: [0.9914442284485164, 0.5084924886592025, -8.474601823850888E-5, 1.0063443885190895, 0.00162736350953874, 0.9886626361301746, 0.6137102743481191, -0.001783984457769369, 0.657969068015302, 0.9748882244023519, 0.6141815705178189, 0.004115899346274733, 0.6316352629784853, 0.9701772873605848, 0.5815305381225676, -0.0012416374785365382, 0.536800844174204, 1.1291508538348527, 0.1715374987653473, -0.0014965428156672753, 2.9871447338969803, 1.1526466280357424, 1.054529616224009, 1.049623069390907, 0.9688202380477864, 0.8218160111054144, 1.0030010170203771]
+Center 7: [0.9887411270837225, 0.6446124611446142, -0.09594174412521679, 0.9798512225088901, -0.09551087140839586, 0.9794571039625579, 0.51246339298656, 0.1867286163308544, 1.6084570698736336, 0.9992090692427199, 0.47179777847540527, -0.07970088198306645, 1.5113154084215106, 0.8824036976744274, 1.089912236722462, 0.029330167117031833, 0.0012142377427797194, 0.9140479510072821, 0.6469619234869973, -0.015052970312280579, 0.0925020070514552, 0.88849212536977, 0.9658093835766765, 1.0514032913742553, 1.0348071288290814, 1.0954250489379105, 1.0387922461768058]
+Center 8: [0.974388543436223, -0.3399847564408275, 0.03154901655620569, 0.97149223186456, 0.056850976472376025, 1.0133738799240695, -0.2536278575528545, -0.8107312503552682, 1.7427430029914381, 1.0276829376762953, -0.25714828761838743, 0.6474794982886246, 1.396517108363153, 0.9104379504286566, -0.2768250184524841, 0.2295878958709775, 0.029641776956031117, 0.9154154511915702, -0.862226356123512, 0.09048465669828948, 0.09366733706783087, 0.9101897695443241, 0.9802626834130976, 1.0516838452965303, 1.0583703100530375, 1.1777195530120146, 1.0763253167207927]
+Center 9: [1.0240143224739209, -0.04003944422437604, 0.4475996324804628, 1.0364812198976296, 0.4098324650635428, 1.017788582891746, -0.06740104709271871, -0.6261836161404281, 0.9625560032464493, 1.0565512985137908, -0.023264755729990108, 0.19243786309151595, 1.710448730834438, 0.9428729511776024, -0.5308351090706661, -0.21391258102983932, 0.06707262388803288, 0.9714145319680113, 0.8053952020988968, 0.025492096107705378, 0.1639948998265553, 1.0131673037427236, 1.0120726769827395, 1.04965521793588, 1.0395452361196833, 0.9955195853913293, 1.0493751970945515]
+Completed IMM for 5000000 rows
+---------------------------------------------

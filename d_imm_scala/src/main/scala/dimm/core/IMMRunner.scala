@@ -1,17 +1,17 @@
 package dimm.core
 
 import dimm.binning.{FindSplits, BinAndAssign}
-import dimm.tree.{Node}
+import dimm.tree.{Node, ContinuousSplit, TreeRouter}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
-import dimm.tree.{ContinuousSplit,TreeRouter}
+import java.io.{File, PrintWriter}
 
 object IMMRunner {
 
   def runIMM(
       clusteredInstances: RDD[Instance],
       clusterCenters: Array[Vector],
-      numSplits: Int = 10,
+      numSplits: Int = 32,
       maxBins: Int = 32,
       seed: Long = 42L
   ): (Map[Int, Node], Array[Array[ContinuousSplit]]) = {
@@ -58,5 +58,22 @@ object IMMRunner {
       val leafId = TreeRouter.findLeaf(inst.features, tree)
       (leafId, inst.features)
     }
+  }
+
+  def saveSplitsToFile(
+      splits: Array[Array[ContinuousSplit]],
+      outputPath: String
+  ): Unit = {
+    val writer = new PrintWriter(new File(outputPath))
+
+    for ((featureSplits, featureIndex) <- splits.zipWithIndex) {
+      writer.println(s"Feature $featureIndex:")
+      featureSplits.foreach { split =>
+        writer.println(f"  threshold=${split.threshold}%.6f")
+      }
+      writer.println()
+    }
+
+    writer.close()
   }
 }

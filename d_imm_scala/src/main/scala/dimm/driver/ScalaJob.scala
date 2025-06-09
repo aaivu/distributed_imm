@@ -57,15 +57,19 @@ object IMMJob {
     val kmeans = new KMeans().setK(k).setSeed(42)
     val model = kmeans.fit(featureDF)
     val clustered = model.transform(featureDF).select("features", "prediction")
+    
 
     val clusteredInstances: RDD[Instance] = clustered.rdd.map {
       case Row(features: Vector, clusterId: Int) =>
         Instance(clusterId, 1.0, features)
     }.cache()
 
+    println(f"\n=== Completed Clustering ===")
+
+    println(f"\n=== Distributed IMM Started \n ===")
     // === Time IMM Execution ===
     val start = System.nanoTime()
-    val (tree, splits) = IMMRunner.runIMM(clusteredInstances, model.clusterCenters, numSplits = 10, maxBins = 32)
+    val (tree, splits) = IMMRunner.runIMM(clusteredInstances, model.clusterCenters, numSplits = 32, maxBins = 32)
     val end = System.nanoTime()
 
     val seconds = (end - start).toDouble / 1e9
@@ -73,17 +77,23 @@ object IMMJob {
 
     // === Print Tree ===
     TreePrinter.printTree(tree, splits)
+    // IMMRunner.saveSplitsToFile(splits, "/home/inuka-asmpavila/University  Projects/FYP/distributed_imm/d_imm_scala/test_data/splits.txt")
 
     val originalKMeansCost = OriginalKMeansCost.compute(clustered, model.clusterCenters)(spark)
     println(f"\n=== Original KMeans Cost (manually computed): $originalKMeansCost%.3f ===")
 
 
-    val treeAssigned = IMMRunner.assignToLeaves(clusteredInstances, tree)
+    val treeAssigned = IMMRunner.assignToLeaves(clusteredInstances, tree) 
     val treeKMeansCost = KMeansCost.compute(treeAssigned)
     println(f"\n=== True K-Means Cost from IMM Tree: $treeKMeansCost%.3f ===")
 
     val surrogateCost = SurrogateKMeansCost.compute(treeAssigned, model.clusterCenters)
     println(f"Surrogate KMeans Cost (IMM clusters + original centers): $surrogateCost%.3f")
+
+    // println("\n=== KMeans Cluster Centers ===")
+    // model.clusterCenters.zipWithIndex.foreach { case (center, idx) =>
+    //   println(s"Center $idx: " + center.toArray.mkString("[", ", ", "]"))
+    // }
 
     spark.stop()
   }
